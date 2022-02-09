@@ -30,7 +30,7 @@ if __name__ == "__main__":
     w_file.close()
 
 def printc(s,color):
-    if False:
+    if True:
         w_file = open("out1",'a')
         w_file.write(f"{Color.colors[color]}{s}{Color.colors['END']}\n")
         w_file.close()
@@ -109,31 +109,20 @@ def verbose_read(npz_in_name='', save=False,filename=''):
     printc(f"\tFinished: matrix creation in {t2-t1} seconds\n\n","GREEN")
 
     if save:
-        printc(f"Starting: file save of Matrix {matrix.shape}","BLUE")
+        printc(f"Starting file save of Matrix: {matrix.shape}","BLUE")
         save_sparse_to_file(matrix,filename)
         printc(f"\tsaved/n/n","TAN")
 
     return matrix, docwords
 
-def verbose_svd_decomp(matrix,i):
+def verbose_svd_decomp(matrix,n):
     printc(f"Starting: reduction via SVD","BLUE")
-
-    var = []
-    for n in [2,5,10,50,100,250]:
-        t1 = time()
-        printc(f"\ttrying n={n}","TAN")
-        tsvd = TruncatedSVD(n_components=n)
-        a = tsvd.fit_transform(matrix)
-        if a.shape[1] == 2:
-                x_vals = [line[0] for line in a]
-                y_vals = [line[1] for line in a]
-                plt.scatter(x_vals,y_vals,marker_size=1)
-                plt.show()
-        printc(f"\tmatrix reduced to: {a.shape}","TAN")
-        printc(f"\tvar: {tsvd.explained_variance_ratio_.sum(): .4f} in {time()-t1} ","TAN")
-        var.append(tsvd.explained_variance_ratio_.sum())
-    plt.plot([2,5,10,50,100,250], var)
-    plt.show()
+    t1 = time()
+    printc(f"\ttrying n={n}","TAN")
+    tsvd = TruncatedSVD(n_components=n)
+    a = tsvd.fit_transform(matrix)
+    printc(f"\tmatrix reduced to: {a.shape}","TAN")
+    printc(f"\tvar: {tsvd.explained_variance_ratio_.sum(): .4f} in {time()-t1} ","TAN")
     return a
 
 def save_svd_decomp(m_reduced,fname):
@@ -172,8 +161,6 @@ def run_kmeans_verbose(matrix,move):
         models[k]['inertia'] = model.inertia_
         models[k]["centers"] = model.cluster_centers_
         models[k]['d_to_c'] = model.predict(a)
-
-
         printc(f"\t\tpredict finished - writing files","TAN")
         np.save(f"data/{k}_centers",models[k]['centers'])
         np.save(f"data/{k}_d_to_clusters",models[k]['d_to_c'])
@@ -182,36 +169,99 @@ def run_kmeans_verbose(matrix,move):
     return models
     printc(f"\t\tfinished all k clusters in {time()-t1} seconds","TAN")
 
+if not __name__ == "__main__":
+
+    print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
+    ############################################################################
+    #### build our sparce matrix and a dictionary of docID -> words_in_doc  ####
+    ############################################################################
+    printc(f"Starting: Matrix creation","BLUE")
+    t1 = time()
+    npz_name = input("npzname: ")
+    matrix, docwords = create_csr_matrix(docNYT,header=3,verbose=True,npzname=npz_name)
+    t2 = time()
+    printc(f"\tMatrix created: {docNYT} shape {matrix.shape}","TAN")
+    printc(f"\tsize: {matrix.data.size/(1024**2):.2f} MB","TAN")
+    printc(f"\tFinished: matrix creation in {t2-t1} seconds\n\n","GREEN")
+
+    printc(f"Starting file save of Matrix: {matrix.shape}","BLUE")
+    save_sparse_to_file(matrix)
+    printc(f"\tsaved/n/n","TAN")
+
+    ############################################################################
+    ################## Calculate the SVD for the matrix ########################
+    ############################################################################
+    #U, S, Vt = svd_calc(matrix,k=50,verbose=True)
+
+    ############################################################################
+    ################### Dimensional Reduction via PCA  #########################
+    ############################################################################
+    printc(f"Starting: reduction via SVD","BLUE")
+    per_var = []
+    n_val   = []
+    t_comp  = []
+    for n in [int(input("n: " ))]:
+        t1 = time()
+        printc(f"\ttrying n={n}","TAN")
+        tsvd = TruncatedSVD(n_components=n)
+        a = tsvd.fit_transform(matrix)
+        printc(f"\tmatrix reduced to: {a.shape}","TAN")
+        printc(f"\tvar: {tsvd.explained_variance_ratio_.sum(): .4f} in {time()-t1} ","TAN")
 
 
-n = int(sys.argv[2])
-raw_data_name   =       sys.argv[3]
-saving_raw_data =       sys.argv[4] in ["T",'t']
-loading_svd     =       sys.argv[5] in ['T','t']
-k_start         = int(  sys.argv[6])
-k_end           = int(  sys.argv[7])
-k_inc           = int(  sys.argv[8])
+    ############################################################################
+    ########################## KMeans analysis  ################################
+    ############################################################################
+    t6 = time()
+    bSize = 50000
+
+    cluster_sizes = [100]
+    model = [None for _ in cluster_sizes]
+    printc(f"Starting KMeans","BLUE")
+    printc(f"\tRunning k-vals of: {cluster_sizes}","BLUE")
+    for i,n in enumerate(cluster_sizes):
+        t1 = time()
+        printc(f"\t\tStarting {i}:","TAN")
+        model[i] = MiniBatchKMeans(n_clusters=n, batch_size = bSize,n_init=9)
+        model[i].fit(a)
+        printc(f"\t\tFinished {i} in {time()-t1} seconds:","TAN")
+
+        printc(f"\t{n} clusters inertia: {model[i].inertia_}","TAN")
 
 
+    ############################################################################
+    ########################### Truncated SVD  #################################
+    ############################################################################
 
-printc(f"looking for words in: {raw_data_name}","BLUE")
-m,dw = verbose_read(npz_in_name=raw_data_name,save=saving_raw_data,filename='preSVD')
-
-if loading_svd:
-    printc(f"\tloading in precomputed SVD matrix","GREEN")
-    m_red = load_svd_decomp(f"decomp_to_{n}.npy")
 else:
-    m_red = verbose_svd_decomp(m,n)
-    save_svd_decomp(m_red,f"decomp_to_{n}.npy")
-printc(f"\tpost SVD shape: {m_red.shape}\n","BLUE")
-move = np.arange(k_start,k_end,k_inc)
-models = run_kmeans_verbose(m_red,move)
+    n = int(sys.argv[2])
+    raw_data_name   =       sys.argv[3]
+    saving_raw_data =       sys.argv[4] in ["T",'t']
+    loading_svd     =       sys.argv[5] in ['T','t']
+    k_start         = int(  sys.argv[6])
+    k_end           = int(  sys.argv[7])
+    k_inc           = int(  sys.argv[8])
 
 
 
-printc(f"\tStarting kmeans","BLUE")
-t= time()
-doc_to_cluster = model.predict(m_red)
-printc(f"Found clusters: {doc_to_cluster.shape} in {time()-t}","GREEN")
-printc(f"{doc_to_cluster[:2]}","TAN")
-np.save("doc_to_cluster",model.predict(m_red))
+    printc(f"looking for words in: {raw_data_name}","BLUE")
+    m,dw = verbose_read(npz_in_name=raw_data_name,save=saving_raw_data,filename='preSVD')
+
+    if loading_svd:
+        printc(f"\tloading in precomputed SVD matrix","GREEN")
+        m_red = load_svd_decomp(f"decomp_to_{n}.npy")
+    else:
+        m_red = verbose_svd_decomp(m,n)
+        save_svd_decomp(m_red,f"decomp_to_{n}.npy")
+    printc(f"\tpost SVD shape: {m_red.shape}\n","BLUE")
+    move = np.arange(k_start,k_end,k_inc)
+    models = run_kmeans_verbose(m_red,move)
+
+
+
+    printc(f"\tStarting kmeans","BLUE")
+    t= time()
+    doc_to_cluster = model.predict(m_red)
+    printc(f"Found clusters: {doc_to_cluster.shape} in {time()-t}","GREEN")
+    printc(f"{doc_to_cluster[:2]}","TAN")
+    np.save("doc_to_cluster",model.predict(m_red))

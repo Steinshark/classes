@@ -1,0 +1,10 @@
+docword.nytimes.txt.gz
+docword.nytimes.txt
+*__pycache__*
+decomp*
+*.npz
+newData*
+*.csv
+*.docword.nytimes.txt
+*data*
+*storage*
