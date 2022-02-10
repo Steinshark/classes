@@ -4,6 +4,7 @@ from BlockchainUtilities import *
 from os.path import isfile
 from fcntl import flock, LOCK_SH,LOCK_EX, LOCK_UN
 from json import dumps, loads
+from os import listdir
 import argparse
 
 class StaticServer:
@@ -69,11 +70,16 @@ class DynamicServer:
     def __init__(self):
         self.app = flask.Flask(__name__)
         self.head_hash = None
+        self.scan_chains()
+        self.longest_chain = 0
     # Maps a block hash to the block itself
 
         @self.app.route('/head')
         def head():
             print(f"{Color.TAN}\thead request recieved\n\n\n{Color.END}")
+
+
+
             with open('cache/current.json') as file :
                 flock(file,LOCK_SH)
                 info = loads(file.read())
@@ -116,6 +122,8 @@ class DynamicServer:
                 return f"{Color.RED}\tblock rejected!{Color.END}", 400
 
             else:
+                update_chains(block)
+                open(f'{hash(block.encode())}')
                 print(f"{Color.GREEN}\taccepted block{Color.END}")
                 print('\n\n\n')
                 return f"{Color.GREEN}\tblock accepted!{Color.END}", 200
@@ -123,6 +131,35 @@ class DynamicServer:
     def run(self,host='lion',port=5002):
         print(f'\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n{Color.GREEN}SERVER STARTED{Color.END}')
         self.app.run(host=host,port=port)
+
+    def scan_chains(self):
+        possible_hashes = []
+        hashes_to_prev_hash = {}
+
+        hash_to_info = {}
+        for file in listdir('cache/'):
+            if file[-5:] == '.json' and not file == 'current.json':
+                hash = file[:-5].strip()
+                possible_hashes.append(hash)
+                with open(f"cache/{file}",'r') as f:
+                    prev_hash = loads(f.read().strip())['prev_hash']
+                    print(f"hash {hash} maps to {prev_hash}")
+
+
+        for not_possible_end_hash in hashes_to_prev_hash.values():
+            possible_hashes.pop(not_possible_end_hash)
+        longest = 0
+        l_hash = None
+        for hash in possible_hashes:
+            bl = len(get_blockchain_from_hash(hash,False))
+            hash_to_info[hash] = bl
+            if bl > longest:
+                longest = bl
+                l_hash = hash
+        self.longest_chain = longest
+        self.longest_hash = l_hash
+        self.all_chains = hash_to_info
+    def update_chains(block):
 
 if __name__ == '__main__':
     host = input('run on host: ').strip()
