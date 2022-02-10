@@ -60,6 +60,7 @@ class ChatService:
             print(f"{Color.RED}Error Downloading Blockchain: Terminated{Color.END}")
             self.blockchain_download = None
             self.blockchain_check = False
+            raise BlockChainRetrievalError(b)
 
 
     def print_blockchain(self):
