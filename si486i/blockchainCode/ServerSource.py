@@ -110,7 +110,7 @@ class DynamicServer:
         def head():
 
             # Some simple debug code
-            printc(f"\thead request recieved\n\n\n",TAN)
+            printc(f"\thead request recieved sending {self.head_hash}\n\n\n",TAN)
 
             # Check that we have a chain
             if self.empty:
