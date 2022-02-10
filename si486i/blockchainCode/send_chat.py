@@ -40,7 +40,7 @@ def send_block(msg):
     # Compile a list of all the head_hashes
     printc(f"Scanning hosts for chain lengths",BLUE)
     for host in open('hosts.txt').readlines():
-        printc(f"\tTrying to connect to host: {host}")
+        printc(f"\tTrying to connect to host: {host}", TAN)
         try:
             host = host.strip()
             head_hashes[host] = get(f"http://{host}:5002/head", timeout=3).content.decode()
