@@ -258,8 +258,8 @@ class DynamicServer:
         printc(f"\t\tLongest chain: {longest} block",TAN)
 
         print(len(possible_hashes))
-        input()
         self.empty = not possible_hashes
+        input(self.empty)
         self.longest_chain = longest
         self.head_hash = l_hash
         self.all_chains = hash_len
