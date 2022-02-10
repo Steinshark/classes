@@ -175,6 +175,6 @@ def send_chat(msg,host,port):
         if post == 200:
             printc(f"\tBlock sent successfully",GREEN)
         else:
-            printc(f"\tCode recieved: {post}, data recieved: {data}",TAN)
+            printc(f"\tCode recieved: {post}",TAN)
     except TypeError:
         printc(f"\tRecieved Null response...",TAN)
