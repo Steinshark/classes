@@ -5,6 +5,7 @@ import numpy as np
 import os
 import sys
 from time import time
+times = {'start' : time()}
 # Package import to work on windows and linux
 try:
     sys.path.append("C:\classes")
@@ -31,32 +32,35 @@ datasets = {    'small'     :  {'movies' : join('ml-latest-small','movies.csv') 
 
 dataframes= {   'small'     :  {'movies' : None, 'ratings' :  None, 'tags' : None},
                 'large'     :  {'movies' : None, 'ratings' :  None, 'tags' : None}}
+
 ################################################################################
 #                           Read into DataFrame
 ################################################################################
+printc(f"BEGIN: Data read from CSV",BLUE)
+times['dread_s'] = time()
 for size in datasets:
-    for set in datasets[size]:
-        if not size == 'large' and set == 'ratings':
-            dataframes[size][set]   = read_csv(datasets[size][set],sep=',')
-
-
-
+    for dset in datasets[size]:
+        if not (size == 'large' and set == 'ratings'):
+            printc(f"\treading {dset}-{size}",TAN)
+            dataframes[size][dset]   = pd.read_csv(datasets[size][dset],sep=',')
 
 ################################################################################
 #                           Read into DataFrame
 ################################################################################
+printc(f"\treading ratings-large",TAN)
 
 t_32 = np.int64
 t_64 = np.int64
 f_16 = np.float16
-df                              = pd.read_csv(  datasets['large']['ratings'],   sep = ',',dtype={'userId':t_32,'movieId':t_64,'rating':f_16})
+df                                  = pd.read_csv(  datasets['large']['ratings'],   sep = ',',dtype={'userId':t_32,'movieId':t_64,'rating':f_16})
 
+printc(f"Finished Data read in {time()-times['dread_s']:.3f} seconds",GREEN)
 ################################################################################
 #                           Gather constants
 ################################################################################
 
-n_movies                        = int(  len(    dataframes['large'][set]        ['movieId'] ))
-n_users                         = int(          dataframes['large']['ratings']  [-1]        )
+n_movies                            = int(  len(    dataframes['large']['movies']       ['movieId'] ))
+n_users                             = int(          dataframes['large']['ratings']      ['userId']  [-1]        )
 
 ################################################################################
 #                           Show Data
@@ -99,3 +103,17 @@ matrix = tf.sparse.SparseTensor(indices=index,values=value,dense_shape=[matrix_y
 ################################################################################
 #                           Define a dictonary to map neighbors
 ###############################################################################
+movie = {
+                movieId     :   0 for movieId in dataframes['large']['movies']
+}
+
+printc(f"{movie}",TAN)
+
+
+################################################################################
+#                           get slices
+###############################################################################
+
+
+for column in n_movies:
+    printc(f"{tf[:,column]}",TAN)
