@@ -200,6 +200,7 @@ class DynamicServer:
                     file.write(block_write_format)
                 printc(f"\taccepted block",GREEN)
                 self.update_chains(block)
+                print(self.all_chains)
                 print('\n\n\n')
                 return f"{Color.GREEN}\tblock accepted!{Color.END}", 200
 
