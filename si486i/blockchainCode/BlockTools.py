@@ -132,6 +132,7 @@ def check_fields(block,allowed_versions=[0],allowed_hashes=[''],trust=False):
     elif (not 'prev_hash' in block) or\
          (not block['prev_hash'] in allowed_hashes):
         print(block['prev_hash'] in allowed_hashes)
+        print(f"type hash {type(block['prev_hash'])} type allowed {allowed_hashes[0]}")
         input()
         print(allowed_hashes)
         input()
@@ -143,6 +144,7 @@ def check_fields(block,allowed_versions=[0],allowed_hashes=[''],trust=False):
     elif (not 'payload' in block) or\
          (not isinstance(block['payload'],dict)) or\
          (('chat' in block['payload']) and (not isinstance(block['payload']['chat'],str))):
+
         print("bad payload")
         return False
 
