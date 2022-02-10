@@ -192,7 +192,7 @@ class DynamicServer:
             if not check_fields(block,allowed_versions = [0],allowed_hashes=['']+grab_cached_hashes()):
                 printc(f"\trejected block",RED)
                 printc('\n\n\n',TAN)
-                return "block rejected!", 400
+                return 413
 
             else:
                 block_write_format = dumps(block)
@@ -202,7 +202,7 @@ class DynamicServer:
                 self.update_chains(block)
                 print(self.all_chains)
                 print('\n\n\n')
-                return "block accepted!", 200
+                return 200
 
 
 
