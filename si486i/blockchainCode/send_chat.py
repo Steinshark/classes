@@ -80,14 +80,15 @@ class Node:
                 self.peer_nodes[host]['fetcher'] = node_fetcher
 
                 # Get info on the chain
-                self.peer_nodes[host]['length'] = node_fetcher.info['length']
+                node_chain_len = node_fetcher.info['length']
+                self.peer_nodes[host]['length'] = node_chain_len
 
                 # Info
-                printc(f"\tConnection to {host} succeeded! Chain of length {blockchain_len} found\n\n",GREEN)
+                printc(f"\tConnection to {host} succeeded! Chain of length {node_chain_len} found\n\n",GREEN)
 
                 # Update global chain tracker
-                if self.peer_nodes[host]['length'] >= self.peer_nodes[self.top_peer]['length']:
-                    self.top_peer = self.peer_nodes[host]['length']
+                if node_chain_len >= self.peer_nodes[self.top_peer]['length']:
+                    self.top_peer = node_chain_len
 
             except BlockChainRetrievalError as b:
                 printc(f"\t{b}",TAN)
