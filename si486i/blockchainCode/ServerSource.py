@@ -231,10 +231,10 @@ class DynamicServer:
         possible_hashes = grab_cached_hashes()
         hash_len = {}
         # This one's great, no?
-        possible_hashes = {hash : loads(open(f"cache/{hash}.json",'r'.read().strip())['prev_hash'] for hash in possible_hashes if not loads(open(f"cache/{hash}.json",'r'.read().strip())['prev_hash'] in possible_hashes }
+        possible_hashes = {hash : loads(open(f"cache/{hash}.json",'r'.read().strip())['prev_hash']) for hash in possible_hashes if not loads(open(f"cache/{hash}.json",'r'.read().strip())['prev_hash']) in possible_hashes }
 
 
-        # Find the longest 
+        # Find the longest
         longest = 0
         l_hash = None
         for hash in possible_hashes:
