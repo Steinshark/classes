@@ -43,7 +43,7 @@ def send_block(msg):
         printc(f"\tTrying to connect to host: {host}", TAN)
         try:
             host = host.strip()
-            head_hashes[host] = get(f"http://{host}:5002/head", timeout=3).content.decode()
+            head_hash[host] = get(f"http://{host}:5002/head", timeout=3).content.decode()
         except BlockChainVerifyError:
             printc(f"\tError in get request on host {host}",RED)
             continue
