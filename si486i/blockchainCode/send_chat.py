@@ -75,7 +75,10 @@ class Node:
 
     def update_peers(self):
         for peer in self.peers:
-            self.update_peer_node_iterative(peer,self.peer_nodes[self.top_peer]['fetcher'].blockchain_download)
+
+            if self.peer_nodes[peer]['length'] < self.peer_nodes[self.top_peer]['length']:
+                printc(f"Updating peer",BLUE)
+                self.update_peer_node_iterative(peer,self.peer_nodes[self.top_peer]['fetcher'].blockchain_download)
 
     def update_peer_node_iterative(self,host,full_blockchain):
         stack = []
@@ -84,8 +87,10 @@ class Node:
 
             payload = {'block' : block_to_JSON(block)}
 
-            return_code = http_post(host, 5002, payload)
-
+            try:
+                return_code = http_post(host, 5002, payload)
+            except ConnectionError:
+                printc(f"Connection Error",RED)
             if return_code == '200':
                 update_peer_node_iterative(host,stack)
                 printc(f"Block accepted! Trying next block in current chain",GREEN)
