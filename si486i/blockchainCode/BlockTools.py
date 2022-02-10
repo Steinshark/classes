@@ -6,7 +6,7 @@ from json import loads, dumps, JSONDecodeError
 from requests import get, post,Timeout, RequestException
 from os.path import isfile, isdir, join
 from os import mkdir, listdir
-import sys 
+import sys
 # Package import to work on windows and linux
 try:
     sys.path.append("C:\classes")
@@ -106,7 +106,7 @@ def iter_local_chain(hash):
         length += 1
         try:
             file = f"cache/{hash}.json"
-            hash = loads(open(file))['prev_hash']
+            hash = loads(open(file).read())['prev_hash']
         except FileNotFoundError:
             printc(f"\t\t{file} was not found in cache",RED)
             return length
