@@ -287,7 +287,6 @@ class DynamicServer:
             file.write(dumps(info))
             flock(file,LOCK_UN)
 
-    def roll_thourgh
 if __name__ == '__main__':
     host = input('run on host: ').strip()
     port = input('run on port: ')
