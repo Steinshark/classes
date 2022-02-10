@@ -98,4 +98,4 @@ class Node:
 
 if __name__ == "__main__":
     n = Node()
-    n.update_peer_node_iterative()
+    n.update_peers()
