@@ -110,7 +110,7 @@ class DynamicServer:
         def head():
 
             # Some simple debug code
-            print(f"{TAN}\thead request recieved\n\n\n{END}")
+            printc(f"\thead request recieved\n\n\n",TAN)
 
             # Check that we have a chain
             if self.empty:
@@ -140,7 +140,7 @@ class DynamicServer:
         def fetch(digest):
 
             # Some simple debug code
-            print(f"request made: {digest}")
+            printc(f"request made: {digest}",TAN)
 
             # Make the (hopefully existing) filename
             filename = f'cache/{digest}.json'
@@ -168,7 +168,7 @@ class DynamicServer:
         @self.app.route('/push', methods=['POST'])
         def push_block():
             received_data = flask.request.form
-            princt(f"\twhile head is {self.head_hash}")
+            printc(f"\twhile head is {self.head_hash}")
             printc(f"\trecieved '{str(received_data)[:35]} ... {str(received_data)[-20:]}'",TAN)
 
 ################################################################################
