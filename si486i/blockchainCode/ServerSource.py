@@ -116,7 +116,7 @@ class DynamicServer:
             if self.empty:
                 with open('cache/current.json','w') as file:
                     flock(file,LOCK_SH)
-                    info = {'length' = 0, 'head' = ''}
+                    info = {'length' : 0, 'head' : ''}
                     file.write(dumps(info))
                     flock(file,LOCK_UN)
                 return "", 200
