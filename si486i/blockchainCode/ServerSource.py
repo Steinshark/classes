@@ -88,7 +88,7 @@ class DynamicServer:
 ################################################################################
 
     def __init__(self):
-        printc(f"STARTING SERVER INIT",BLUE)
+        printc(f"\t\t\tSTARTING SERVER INIT",BLUE)
         printc(f"\tInit vars",TAN)
         self.app = flask.Flask(__name__)
         self.empty = True
@@ -114,8 +114,13 @@ class DynamicServer:
 
             # Check that we have a chain
             if self.empty:
-                return f"{RED}This node has no blocks yet :({END}", 500
-            # Open, lock, read the head file, and send tahe info back
+                with open('cache/current.json','w') as file:
+                    flock(file,LOCK_SH)
+                    info = {'length' = 0, 'head' = ''}
+                    file.write(dumps(info))
+                    flock(file,LOCK_UN)
+                return "", 200
+            # Open, lock, read the head file, and send the info back
             with open('cache/current.json') as file :
                 flock(file,LOCK_SH)
                 info = loads(file.read())
@@ -177,6 +182,7 @@ class DynamicServer:
 
             except JSONDecodeError as j:
                 printc(f"\terror decoding sent block",RED)
+                return f"{Color.RED}\tblock rejected - check your block encoding!{Color.END}", 400
 
 ################################################################################
 #                    Check if the block fields are OK
