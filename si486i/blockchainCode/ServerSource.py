@@ -13,6 +13,7 @@ try:
     import Toolchain
 except ModuleNotFoundError:
     sys.path.append("~\classes")
+    print(sys.path)
     import Toolchain
 
 
