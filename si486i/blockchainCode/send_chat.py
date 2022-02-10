@@ -30,15 +30,15 @@ def send_chat(msg,host,port):
     push_data = {'block' : json_encoded_block}
 
     # Send it
-    printc(f"Sending block to {host}",TAN)
+    printc(f"\tSending block to {host}",TAN)
     try:
         data, post = http_post(URL['push'],push_data)
+        if post == 200:
+            printc(f"\tBlock sent successfully",GREEN)
+        else:
+            printc(f"\tCode recieved: {post}, data recieved: {data}",TAN)
     except TypeError:
-        printc(f"Recieved Null response...",TAN)
-    if post == 200:
-        printc(f"Block sent successfully",GREEN)
-    else:
-        printc(f"Code recieved: {post}, data recieved: {data}",TAN)
+        printc(f"\tRecieved Null response...",TAN)
 
 def send_block(msg):
     hosts = {}
@@ -79,7 +79,6 @@ def send_block(msg):
 
     for host in hosts:
         if hosts[host].info['length'] >= longest_chain_len:
-            printc(f"\tSending block to host {host}",TAN)
             send_chat(msg,host,5002)
 
 
