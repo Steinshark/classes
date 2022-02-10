@@ -279,7 +279,7 @@ class DynamicServer:
 
             # If this makes a new longest chain, update file
             if self.all_chains[block_hash] > self.longest_chain:
-                self.longest_hash = block_hash
+                self.head_hash = block_hash
                 self.longest_chain += 1
                 self.write_current()
 
@@ -290,14 +290,14 @@ class DynamicServer:
 
             # Check if its the longest (Aka first block)
             if self.all_chains[block_hash] > self.longest_chain:
-                self.longest_hash = block_hash
+                self.head_hash = block_hash
                 self.longest_chain += 1
                 self.write_current()
 
     def write_current(self):
         with open('cache/current.json','w') as file:
             flock(file,LOCK_SH)
-            info = {'length' : self.longest_chain, 'head' : self.longest_hash}
+            info = {'length' : self.longest_chain, 'head' : self.head_hash}
             file.write(dumps(info))
             flock(file,LOCK_UN)
 
