@@ -168,7 +168,7 @@ class DynamicServer:
         @self.app.route('/push', methods=['POST'])
         def push_block():
             received_data = flask.request.form
-            printc(f"\twhile head is {self.head_hash}")
+            printc(f"\twhile head is {self.head_hash}",TAN)
             printc(f"\trecieved '{str(received_data)[:35]} ... {str(received_data)[-20:]}'",TAN)
 
 ################################################################################
