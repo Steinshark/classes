@@ -75,7 +75,7 @@ def get_blockchain(hostname='cat',port='5000',caching=False,cache_location='cach
 
         # verify the block
         try:
-            hashed_to = hash('hex',retrieve_block(retrieve_prev_hash(block),host=hostname,port=port).encode())
+            hashed_to = hash(retrieve_block(retrieve_prev_hash(block),host=hostname,port=port).encode())
         except HashRetrievalException as h:
             print(h)
             raise BlockChainError(h)
@@ -147,7 +147,7 @@ def get_blockchain_from_hash(hash,caching=False,cache_location='cache', last_ver
 
         # verify the block
         try:
-            hashed_to = hash('hex',retrieve_block(retrieve_prev_hash(block),host=hostname,port=port).encode())
+            hashed_to = hash(retrieve_block(retrieve_prev_hash(block),host=hostname,port=port).encode())
         except HashRetrievalException as h:
             print(h)
             raise BlockChainError(h)
@@ -183,7 +183,7 @@ def verify_blockchain(blockchain):
         if index == len(blockchain) - 1:
             prev_hash = ''
         else:
-            prev_hash = hash('hex',block_to_JSON(blockchain[index+1][1]).encode())
+            prev_hash = hash(block_to_JSON(blockchain[index+1][1]).encode())
 
         # Check the fields of the block for errors
         if not check_fields(block,allowed_hashes=[prev_hash]):
