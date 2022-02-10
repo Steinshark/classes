@@ -96,7 +96,7 @@ class Node:
                 update_peer_node_iterative(host,stack)
                 printc(f"Block accepted! Trying next block in current chain",GREEN)
             else:
-                printc(f"{hash[:10]}->{post},  ",TAN,end='')
+                printc(f"{hash[:10]}->{post},  ",TAN,endl='')
                 continue
 
         printc(f"Finished trying to push chain",TAN)
