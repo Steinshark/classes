@@ -88,7 +88,7 @@ def build_block(prev_hash,payload,ver):
 
 # returns a list of all the allowed hashes
 def grab_cached_hashes(cache_location='cache'):
-    allowed_hashes = [file.split('.')[0] for file in listdir(cache_location) if file.split('.')[-1] == 'json' and not file.split(.)[0] == 'current']
+    allowed_hashes = [file.split('.')[0] for file in listdir(cache_location) if file.split('.')[-1] == 'json' and not file.split('.')[0] == 'current']
     return allowed_hashes
 
 
