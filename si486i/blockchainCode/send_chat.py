@@ -93,7 +93,7 @@ class Node:
                 continue
 
             if return_code.status_code == 200:
-                update_peer_node_iterative(host,stack)
+                self.update_peer_node_iterative(host,stack)
                 printc(f"Block accepted! Trying next block in current chain",GREEN)
             else:
                 printc(f"{hash[:5]}->{return_code},  ",TAN,endl='')
