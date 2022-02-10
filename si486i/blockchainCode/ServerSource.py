@@ -283,7 +283,7 @@ class DynamicServer:
                 self.write_current()
 
     def write_current(self):
-        with open('cache/current.json') as file:
+        with open('cache/current.json','w') as file:
             flock(file,LOCK_SH)
             info = {'length' : self.longest_chain, 'head' : self.longest_hash}
             file.write(dumps(info))
