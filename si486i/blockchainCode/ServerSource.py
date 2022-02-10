@@ -123,7 +123,7 @@ class DynamicServer:
             with open('cache/current.json') as file :
                 flock(file,LOCK_SH)
                 info = loads(file.read())
-                self.blockchain_len = info['length']
+                self.longest_chain = info['length']
                 self.head_hash = info['head']
                 flock(file,LOCK_UN)
 
@@ -265,8 +265,17 @@ class DynamicServer:
         if not self.empty:
             self.longest_chain = longest
             self.head_hash = l_hash
+            self.write_current()
         else:
             printc(f"\t\tServer INITed as EMPTY",RED)
+
+        with open('cache/current.json') as file :
+            flock(file,LOCK_SH)
+            info = loads(file.read())
+            self.longest_chain = info['length']
+            self.head_hash = info['head']
+            flock(file,LOCK_UN)
+        printc(f"\t\thead is now at {self.head_hash} of len {self.blockchain_len}")
         self.all_chains = hash_len
 
     def update_chains(self,block):
