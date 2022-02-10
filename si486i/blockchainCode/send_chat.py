@@ -1,4 +1,5 @@
-from BlockTools import http_post, build_block
+from BlockTools import *
+from BlockchainErrors import * 
 from json import dumps
 from show_chat import ChatService
 from requests import get
