@@ -63,7 +63,7 @@ matrix = coo_matrix( (dataframes['large']['ratings']['rating'],(dataframes['larg
 
 
 
-print(f"\tsize: {coo_matr.data.size/(1024**2):.2f} MB")
+print(f"\tsize: {matrix.data.size/(1024**2):.2f} MB")
 print(f'finished in {time()-t1} seconds')
 
 
