@@ -89,6 +89,7 @@ class DynamicServer:
 
     def __init__(self):
         self.app = flask.Flask(__name__)
+        self.empty = True
         self.head_hash = None                   # Keep track of whats in current
         self.longest_chain = 0                  # This will be used as a dynamic
                                                 #                 'current.json'
@@ -208,6 +209,7 @@ class DynamicServer:
 ################################################################################
 ################################################################################
     def scan_chains(self):
+        printc(f"Scanning for all local chains stored on server",BLUE)
         possible_hashes = []
         hashes_to_prev_hash = {}
 
@@ -215,7 +217,6 @@ class DynamicServer:
         if not isdir('cache'):
             mkdir("cache")
             self.all_chains = {}
-            self.empty = True
             return
         for file in listdir('cache/'):
             if file[-5:] == '.json' and not file == 'current.json':
@@ -223,7 +224,7 @@ class DynamicServer:
                 possible_hashes.append(hash)
                 with open(f"cache/{file}",'r') as f:
                     prev_hash = loads(f.read().strip())['prev_hash']
-                    print(f"hash {hash} maps to {prev_hash}")
+                    printc(f"hash {hash} maps to {prev_hash}",TAN)
 
 
         for not_possible_end_hash in hashes_to_prev_hash.values():
@@ -236,6 +237,7 @@ class DynamicServer:
             if bl > longest:
                 longest = bl
                 l_hash = hash
+        self.empty = not possible_hashes
         self.longest_chain = longest
         self.longest_hash = l_hash
         self.all_chains = hash_to_info
