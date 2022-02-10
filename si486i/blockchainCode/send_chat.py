@@ -2,7 +2,7 @@ from BlockTools import http_post, build_block
 from json import dumps
 from show_chat import ChatService
 from requests import get
-import sys 
+import sys
 # Package import to work on windows and linux
 try:
     sys.path.append("C:\classes")
@@ -42,13 +42,16 @@ def send_block(msg):
         try:
             host = host.strip()
             head_hashes[host] = get(f"http://{host}:5002/head", timeout=3).content.decode()
+        except:
+            printc(f"Error in get request on host {host}",RED)
+        try:
             chatter = ChatService(host=host,port=5002)
             chatter.fetch_blockchain()
             hosts[host] = chatter
             if chatter.info['length'] >= longest_chain_len:
                 longest_chain_len = chatter.info['length']
         except:
-            print(f"Error connecting to host: {host} on port 5002")
+            printc(f"Error in fetch blockchain on host {host}", RED)
 
     printc(f"longest chain is len: {longest_chain_len}",BLUE)
     printc(f"Sending out blocks",BLUE)
