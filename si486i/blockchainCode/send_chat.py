@@ -1,5 +1,5 @@
 from BlockTools import *
-from BlockchainErrors import * 
+from BlockchainErrors import *
 from json import dumps
 from show_chat import ChatService
 from requests import get
@@ -40,11 +40,13 @@ def send_block(msg):
     # Compile a list of all the head_hashes
     printc(f"Scanning hosts for chain lengths",BLUE)
     for host in open('hosts.txt').readlines():
+        printc(f"\tTrying to connect to host: {host}")
         try:
             host = host.strip()
             head_hashes[host] = get(f"http://{host}:5002/head", timeout=3).content.decode()
         except:
-            printc(f"Error in get request on host {host}",RED)
+            printc(f"\tError in get request on host {host}",RED)
+            continue
         try:
             chatter = ChatService(host=host,port=5002)
             chatter.fetch_blockchain()
@@ -52,8 +54,8 @@ def send_block(msg):
             if chatter.info['length'] >= longest_chain_len:
                 longest_chain_len = chatter.info['length']
         except BlockChainRetrievalError as b:
-            printc(f"{b}",TAN)
-            printc(f"Error in fetch blockchain on host {host}", RED)
+            printc(f\f"{b}",TAN)
+            printc(f"\tError in fetch blockchain on host {host}", RED)
 
     printc(f"longest chain is len: {longest_chain_len}",BLUE)
     printc(f"Sending out blocks",BLUE)
