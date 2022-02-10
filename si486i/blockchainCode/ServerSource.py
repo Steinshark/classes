@@ -271,7 +271,6 @@ class DynamicServer:
 
         # This case we are adding to an existing chain
         if block['prev_hash'] in self.all_chains:
-
             # Get old chain length
             prev_len = self.all_chains[block['prev_hash']]
 
@@ -281,6 +280,7 @@ class DynamicServer:
 
             # If this makes a new longest chain, update file
             if self.all_chains[block_hash] > self.longest_chain:
+                print("CHain updated")
                 self.head_hash = block_hash
                 self.longest_chain += 1
                 self.write_current()
@@ -292,6 +292,7 @@ class DynamicServer:
 
             # Check if its the longest (Aka first block)
             if self.all_chains[block_hash] > self.longest_chain:
+                print("CHain updated")
                 self.head_hash = block_hash
                 self.longest_chain += 1
                 self.write_current()
