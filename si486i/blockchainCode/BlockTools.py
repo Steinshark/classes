@@ -178,3 +178,4 @@ def send_chat(msg,host,port):
             printc(f"\tCode recieved: {post}, data recieved: {data}",TAN)
     except TypeError:
         printc(f"\tRecieved Null response...",TAN)
+dat

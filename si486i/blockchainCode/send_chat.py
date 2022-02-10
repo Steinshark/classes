@@ -72,8 +72,11 @@ class Node:
 
         printc(f"longest chain is len: {self.peer_nodes[self.top_peer]['length']} on host {self.top_peer}",BLUE)
 
-    def update_peer_node_iterative(host,full_blockchain,peer_head_hash):
-        pass
+    def update_peer_node_iterative(self,host,full_blockchain,peer_head_hash):
+        for (hash,block) in full_blockchain:
+            post_data = {'block' : block_to_JSON(block)}
+
+            if 
 
 
 if __name__ == "__main__":
