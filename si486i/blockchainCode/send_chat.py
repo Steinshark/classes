@@ -76,8 +76,6 @@ class Node:
         for (hash,block) in full_blockchain:
             post_data = {'block' : block_to_JSON(block)}
 
-            if 
-
 
 if __name__ == "__main__":
     n = Node()
