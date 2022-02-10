@@ -111,7 +111,7 @@ class DynamicServer:
 
             # Some simple debug code
             printc(f"\thead request recieved sending {self.head_hash}\n\n\n",TAN)
-            printc(f"\thead accounting for length {iter_local_chain(hash)}",TAN)
+            printc(f"\thead accounting for length {iter_local_chain(self.head_hash)}",TAN)
 
             # Check that we have a chain
             if self.empty:
