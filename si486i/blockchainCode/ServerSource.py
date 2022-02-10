@@ -8,8 +8,12 @@ from os import listdir
 import argparse
 import sys
 
-sys.path.append("C:\classes")
-import Toolchain
+try:
+    sys.path.append("C:\classes")
+    import Toolchain
+except ModuleNotFoundError:
+    sys.path.append("~\classes")
+    import Toolchain
 
 
 
