@@ -3,7 +3,7 @@
 #########################################################################################
 from hashlib import sha256, sha3_256
 from json import loads, dumps, JSONDecodeError
-from requests import get, post, Timeout, RequestException, ConnectionError
+from requests import get, post, Timeout 
 from BlockTools import *
 from BlockchainErrors import *
 from os.path import isfile, isdir, join

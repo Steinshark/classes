@@ -3,6 +3,7 @@ from BlockchainErrors import *
 from json import dumps
 from show_chat import ChatService
 from requests import get
+from requests.exceptions import ConnectionError
 import sys
 # Package import to work on windows and linux
 try:
