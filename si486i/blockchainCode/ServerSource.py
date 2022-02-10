@@ -238,7 +238,10 @@ class DynamicServer:
 
 
         for not_possible_end_hash in hashes_to_prev_hash.values():
-            possible_hashes.remove(not_possible_end_hash)
+            try:
+                possible_hashes.remove(not_possible_end_hash)
+            except ValueError:
+                printc(f"tried to remove {not_possible_end_hash[:10]} from list",RED)
         longest = 0
         l_hash = None
         for hash in possible_hashes:
