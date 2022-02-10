@@ -6,7 +6,7 @@ from json import loads, dumps, JSONDecodeError
 from requests import get, post,Timeout, RequestException
 from os.path import isfile, isdir, join
 from os import mkdir, listdir
-
+import sys 
 # Package import to work on windows and linux
 try:
     sys.path.append("C:\classes")
