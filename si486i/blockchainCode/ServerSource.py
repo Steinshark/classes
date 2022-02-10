@@ -265,6 +265,8 @@ class DynamicServer:
         if not self.empty:
             self.longest_chain = longest
             self.head_hash = l_hash
+        else:
+            printc(f"\t\tServer INITed as EMPTY",RED)
         self.all_chains = hash_len
 
     def update_chains(self,block):
