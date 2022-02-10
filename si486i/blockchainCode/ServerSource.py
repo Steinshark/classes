@@ -6,6 +6,12 @@ from fcntl import flock, LOCK_SH,LOCK_EX, LOCK_UN
 from json import dumps, loads
 from os import listdir
 import argparse
+import sys
+
+#sys.path.append("C:\classes")
+import Toolchain
+
+
 
 class StaticServer:
     def __init__(self):
@@ -67,19 +73,37 @@ class StaticServer:
         self.app.run(host=host,port=port)
 
 class DynamicServer:
+
+
+################################################################################
+################################################################################
+#                               CREATE INSTANCE
+################################################################################
+################################################################################
+
     def __init__(self):
         self.app = flask.Flask(__name__)
-        self.head_hash = None
-        self.scan_chains()
-        self.longest_chain = 0
-    # Maps a block hash to the block itself
+        self.head_hash = None                   # Keep track of whats in current
+        self.longest_chain = 0                  # This will be used as a dynamic
+                                                #                 'current.json'
+
+        self.scan_chains()                      # Builds the initial chains list
+
+
+
+################################################################################
+################################################################################
+#                    HANDLE HEAD REQUESTS
+################################################################################
+################################################################################
 
         @self.app.route('/head')
         def head():
+
+            # Some simple debug code
             print(f"{Color.TAN}\thead request recieved\n\n\n{Color.END}")
 
-
-
+            # Open, lock, read the head file, and send tahe info back
             with open('cache/current.json') as file :
                 flock(file,LOCK_SH)
                 info = loads(file.read())
@@ -87,14 +111,31 @@ class DynamicServer:
                 self.head_hash = info['head']
                 flock(file,LOCK_UN)
 
-            return self.head_hash
+            # Can't imagine how this would not return 200
+            return self.head_hash, 200
+
+
+
+################################################################################
+################################################################################
+#                    HANDLE HASH-FETCH REQUESTS
+################################################################################
+################################################################################
 
         @self.app.route('/fetch/<digest>')
         def fetch(digest):
+
+            # Some simple debug code
             print(f"request made: {digest}")
+
+            # Make the (hopefully existing) filename
             filename = f'cache/{digest}.json'
+
+            # Handle an error - 404 == not found here
             if not isfile(filename):
-                return f'{filename} not found in cache', 400
+                return f'{filename} not found in cache', 404
+
+            # Open up that file up (with locks!) and shoot it back to them
             else:
                 with open(filename) as file:
                     flock(file,LOCK_SH)
@@ -102,12 +143,22 @@ class DynamicServer:
                     flock(file,LOCK_UN)
                     return block, 200
 
+
+
+################################################################################
+################################################################################
+#                    HANDLE PUSH REQUESTS TO THE SERVER
+################################################################################
+################################################################################
+
         @self.app.route('/push', methods=['POST'])
         def push_block():
             received_data = flask.request.form
             print(f"{Color.TAN}\trecieved '{str(received_data)[:35]} ... {str(received_data)[-20:]}'{Color.END}")
 
-            # assuming block is JSON with 'block' key
+################################################################################
+#                    Check if the message is decodable at all
+
             try:
                 block = JSON_to_block(received_data['block'])
                 print(f"{Color.TAN}\tdecoded to '{str(block)[:35]} ... {str(block)[-20:]}'{Color.END}")
@@ -115,6 +166,8 @@ class DynamicServer:
             except JSONDecodeError as j:
                 print(f"{Color.RED}\terror decoding sent block{Color.END}")
 
+################################################################################
+#                    Check if the block fields are OK
 
             if not check_fields(block,allowed_versions = [0],allowed_hashes=['']+grab_cached_hashes(cache_location='cache')):
                 print(f"{Color.RED}\trejected block{Color.END}")
@@ -128,10 +181,24 @@ class DynamicServer:
                 print('\n\n\n')
                 return f"{Color.GREEN}\tblock accepted!{Color.END}", 200
 
+
+
+################################################################################
+################################################################################
+#                    EXECUTE AN INSTANCE OF THE SERVER
+################################################################################
+################################################################################
     def run(self,host='lion',port=5002):
-        print(f'\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n{Color.GREEN}SERVER STARTED{Color.END}')
+#        print(f{Color.GREEN}SERVER STARTED{Color.END}')
         self.app.run(host=host,port=port)
 
+
+
+################################################################################
+################################################################################
+#                    EXECUTE AN INSTANCE OF THE SERVER
+################################################################################
+################################################################################
     def scan_chains(self):
         possible_hashes = []
         hashes_to_prev_hash = {}
@@ -159,7 +226,9 @@ class DynamicServer:
         self.longest_chain = longest
         self.longest_hash = l_hash
         self.all_chains = hash_to_info
+        
     def update_chains(block):
+        pass
 
 if __name__ == '__main__':
     host = input('run on host: ').strip()

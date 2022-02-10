@@ -6,5 +6,5 @@ decomp*
 newData*
 *.csv
 *.docword.nytimes.txt
-*/data*
+*/data/*
 *storage*
