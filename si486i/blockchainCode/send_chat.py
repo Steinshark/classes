@@ -2,7 +2,7 @@ from BlockTools import http_post, build_block
 from json import dumps
 from show_chat import ChatService
 from requests import get
-
+import sys 
 # Package import to work on windows and linux
 try:
     sys.path.append("C:\classes")
