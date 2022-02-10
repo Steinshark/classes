@@ -187,6 +187,7 @@ class DynamicServer:
             print(block['prev_hash'])
             print(self.head_hash)
             print(block['prev_hash'] == self.head_hash)
+            print(isfile(f"cache/{self.head_hash}.json"))
             input()
             if not check_fields(block,allowed_versions = [0],allowed_hashes=['']+grab_cached_hashes()):
                 printc(f"\trejected block",RED)
