@@ -97,7 +97,7 @@ def get_blockchain(hostname='cat',port='5000',caching=False,cache_location='cach
 
     return blockchain
 
-def get_blockchain_from_hash(hash,caching=False,cache_location='cache', last_verified=''):
+def get_blockchain_from_hash(hash,caching=False,cache_location='cache', last_verified='',hostname='cat',port=5002):
 
     # if caching, then check if the folder exists, and create if not
     if caching:

@@ -90,6 +90,14 @@ def build_block(prev_hash,payload,ver):
 def grab_cached_hashes(cache_location='cache'):
     allowed_hashes = [file.split('.')[0] for file in listdir(cache_location) if file.split('.')[-1] == 'json']
     return allowed_hashes
+
+
+def iter_local_chain(hash):
+    length = 0
+    while not hash == '':
+        length += 1
+        hash = loads(open(f"{hash}.json"))['prev_hash']
+    return len
 #########################################################################################
 ########################## FUNCTIONS FOR PROCESSING BLOCKCHAIN ##########################
 #########################################################################################

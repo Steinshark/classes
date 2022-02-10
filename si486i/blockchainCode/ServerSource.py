@@ -216,31 +216,29 @@ class DynamicServer:
 ################################################################################
     def scan_chains(self):
         printc(f"\tScanning for local chains",BLUE)
-        possible_hashes = []
-        hashes_to_prev_hash = {}
 
-        hash_to_info = {}
+
+
+        # Make sure cache exists
         if not isdir('cache'):
             mkdir("cache")
             printc(f"\t\tNo blocks found",RED)
             self.all_chains = {}
             return
-        for file in listdir('cache/'):
-            if file[-5:] == '.json' and not file == 'current.json':
-                hash = file[:-5].strip()
-                possible_hashes.append(hash)
-                with open(f"cache/{file}",'r') as f:
-                    prev_hash = loads(f.read().strip())['prev_hash']
-                    printc(f"\t\thash {hash[:20]}... maps to {prev_hash[:20]}..",TAN)
 
 
-        for not_possible_end_hash in hashes_to_prev_hash.values():
-            possible_hashes.pop(not_possible_end_hash)
+        # Set some dicts
+        possible_hashes = grab_cached_hashes()
+        hash_len = {}
+        # This one's great, no?
+        possible_hashes = {hash : loads(open(f"cache/{hash}.json",'r'.read().strip())['prev_hash'] for hash in possible_hashes if not loads(open(f"cache/{hash}.json",'r'.read().strip())['prev_hash'] in possible_hashes }
+
+
+        # Find the longest 
         longest = 0
         l_hash = None
         for hash in possible_hashes:
-            length = len(get_blockchain_from_hash(hash,False))
-            hash_to_info[hash] = length
+            hash_len[hash] = iter_local_chain(hash)
             if bl > longest:
                 longest = bl
                 l_hash = hash
@@ -250,7 +248,7 @@ class DynamicServer:
         self.empty = not possible_hashes
         self.longest_chain = longest
         self.longest_hash = l_hash
-        self.all_chains = hash_to_info
+        self.all_chains = hash_len
 
     def update_chains(self,block):
         block_hash = hash(block.encode())
@@ -288,6 +286,8 @@ class DynamicServer:
             info = {'length' : self.longest_chain, 'head' : self.longest_hash}
             file.write(dumps(info))
             flock(file,LOCK_UN)
+
+    def roll_thourgh
 if __name__ == '__main__':
     host = input('run on host: ').strip()
     port = input('run on port: ')
