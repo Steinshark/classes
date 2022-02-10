@@ -1,10 +1,10 @@
 import flask
 from BlockTools import *
 from BlockchainUtilities import *
-from os.path import isfile
+from os.path import isfilem isdir
 from fcntl import flock, LOCK_SH,LOCK_EX, LOCK_UN
 from json import dumps, loads
-from os import listdir
+from os import listdir, mkdir
 import argparse
 import sys
 
@@ -106,8 +106,11 @@ class DynamicServer:
         def head():
 
             # Some simple debug code
-            print(f"{Color.TAN}\thead request recieved\n\n\n{Color.END}")
+            print(f"{TAN}\thead request recieved\n\n\n{END}")
 
+            # Check that we have a chain
+            if self.empty:
+                return f"{RED}This node has no blocks yet :({END}", 500
             # Open, lock, read the head file, and send tahe info back
             with open('cache/current.json') as file :
                 flock(file,LOCK_SH)
@@ -209,6 +212,11 @@ class DynamicServer:
         hashes_to_prev_hash = {}
 
         hash_to_info = {}
+        if not isdir('cache'):
+            os.mkdir("cache")
+            self.all_chains = {}
+            self.empty = True
+            return
         for file in listdir('cache/'):
             if file[-5:] == '.json' and not file == 'current.json':
                 hash = file[:-5].strip()
