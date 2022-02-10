@@ -12,10 +12,10 @@ import sys
 try:
     sys.path.append("C:\classes")
     sys.path.append("D:\classes")
-    from Toolchain import terminal
+    from Toolchain from terminal import *
 except ModuleNotFoundError:
     sys.path.append("/home/m226252/classes")
-    from Toolchain import terminal
+    from Toolchain from terminal import *
 
 
 
