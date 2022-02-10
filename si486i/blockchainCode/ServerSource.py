@@ -213,7 +213,7 @@ class DynamicServer:
 
         hash_to_info = {}
         if not isdir('cache'):
-            os.mkdir("cache")
+            mkdir("cache")
             self.all_chains = {}
             self.empty = True
             return
