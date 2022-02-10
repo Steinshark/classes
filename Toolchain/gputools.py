@@ -4,8 +4,8 @@
 from tensorflow import square, reduce_sum, sqrt
 
 
-# Computes the euclidean distance of tensors A and B 
-def GPU_euclidean_dista(A,B):
+# Computes the euclidean distance of tensors A and B
+def euclidean_distance(A,B):
 
     # Error Check
     if not A.shape == B.shape:

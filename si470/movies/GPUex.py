@@ -11,6 +11,7 @@ try:
     sys.path.append("C:\classes")
     sys.path.append("D:\classes")
     from Toolchain.terminal import *
+    from Toolchain.DataTools import GPU_euclidean_dist
 except ModuleNotFoundError:
     sys.path.append("/home/m226252/classes")
     from Toolchain.terminal import *
@@ -41,37 +42,52 @@ times['dread_s'] = time()
 for size in datasets:
     for dset in datasets[size]:
         if not (size == 'large' and set == 'ratings'):
-            printc(f"\treading {dset}-{size}",TAN)
+            printc(f"\treading {dset}-{size}",TAN,endl='')
             dataframes[size][dset]   = pd.read_csv(datasets[size][dset],sep=',')
 
+            printc(f"\tsize: {(dataframes[size][dset].memory_usage().sum() / (1024.0*1024.0)):.2f} MB",TAN)
 ################################################################################
 #                           Read into DataFrame
 ################################################################################
 printc(f"\treading ratings-large",TAN)
-
-t_32 = np.int64
-t_64 = np.int64
-f_16 = np.float16
-df                                  = pd.read_csv(  datasets['large']['ratings'],   sep = ',',dtype={'userId':t_32,'movieId':t_64,'rating':f_16})
+f_64 = np.float64
+df                                  = pd.read_csv(  datasets['large']['ratings'],   sep = ',',dtype={'userId':f_64,'movieId':f_64,'rating':f_64, 'timestamp':f_64})
 
 printc(f"Finished Data read in {time()-times['dread_s']:.3f} seconds",GREEN)
+
+
+################################################################################
+#                           Get USNA Movies 
+###############################################################################
+
+
+
+
+################################################################################
+#                           Define a dictonary to map neighbors
+###############################################################################
+
+
+
+
+
 ################################################################################
 #                           Gather constants
 ################################################################################
-
-n_movies                            = int(  len(    dataframes['large']['movies']       ['movieId'] ))
-n_users                             = int(          dataframes['large']['ratings']      ['userId']  [-1]        )
+#                                                   # dataset                           # column        #index
+n_movies                            = int(  len(    dataframes['large']['movies']       ['movieId']                 ))
+n_users                             = int(          dataframes['large']['ratings']      ['userId'].iloc      [-1]        )
 
 ################################################################################
 #                           Show Data
 ################################################################################
 
-printc(f"DATASET: ")
-printc(f"\t'ratings' looks like:\n{df.head(3)}...\n{df.tail(3)}\n\n",TAN)
-printc(f"\t'movies' looks like:\n{dataframes['large']['movies'].head(3)}...\n{dataframes['large']['movies'].tail(3)}\n\n",TAN)
+printc(f"\n\nDATASET: ",BLUE)
+printc(f"\t{BLUE}'ratings' looks like:  {END}\n     {df.head(3)}\n\n",TAN)
+printc(f"\t{BLUE}'movies' looks like:   {END}\n     {dataframes['large']['movies'].head(3)}\n\n",TAN)
 
-printc(f"\tnumber of users: {n_users}",TAN)
-printc(f"\tnumber of movies: {n_movies}\n\n",TAN)
+printc(f"\t{BLUE}number of users:       {END}       {n_users}",TAN)
+printc(f"\t{BLUE}number of movies:      {END}       {n_movies}\n\n",TAN)
 
 ################################################################################
 #                           Build Matrix indices and values
@@ -80,13 +96,13 @@ printc(f"\tnumber of movies: {n_movies}\n\n",TAN)
 printc(f"Building Index and Value Tensors\n\n",GREEN)
 t1 = time()
 # Set x,y index arrays and build index tensor (2,x)
-matrix_x = tf.convert_to_tensor(df['movieId'])
-matrix_y = tf.convert_to_tensor(df['userId'])
+matrix_x = tf.convert_to_tensor(df['userId'],dtype=tf.dtypes.int64)
+input(matrix_x)
+matrix_y = tf.convert_to_tensor(df['movieId'],dtype=tf.dtypes.int64)
 index = tf.stack([matrix_x,matrix_y],axis=1)
-
-
+input(index)
 # Build value tensor
-value = tf.convert_to_tensor(df['rating'])
+value = tf.convert_to_tensor(df['rating'],dtype=tf.dtypes.float16)
 value = tf.transpose(value)
 
 # Info
@@ -110,10 +126,34 @@ movie = {
 printc(f"{movie}",TAN)
 
 
+
+
+usna_movies = {
+    "Black Panther"                              :  122906,
+    "Pitch Perfect"                              :  96588,
+    "Star Wars: The Last Jedi"                   :  179819,
+    "It"                                         :  175303,
+    "The Big Sick"                               :  168326,
+    "Lady Bird"                                  :  177615,
+    "Pirates of the Caribbean"                   :  6539,
+    "Despicable Me"                              :  79091,
+    "Coco"                                       :  161644,
+    "John Wick"                                  :  115149,
+    "Mamma Mia"                                  :  60397,
+    "Crazy Rich Asians"                          :  192283,
+    "Three Billboards Outside Ebbings, Missouri" :  177593,
+    "The Incredibles"                            :  8961
+}
+
+
 ################################################################################
 #                           get slices
 ###############################################################################
 
 
-for column in n_movies:
-    printc(f"{tf[:,column]}",TAN)
+for movieId in range(n_movies):
+    column_matrix_sparse    =       tf.sparse.slice(    matrix,     [0,movieId],     [n_users,1])
+    column_matrix           =       tf.sparse.to_dense(column_matrix_sparse)
+
+    print(f"{euclidean_distance()}")
+    printc(f"{column_matrix}",TAN)
