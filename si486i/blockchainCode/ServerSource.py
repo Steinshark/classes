@@ -255,7 +255,7 @@ class DynamicServer:
 
         self.empty = not possible_hashes
         self.longest_chain = longest
-        self.head_hash = longest_hash
+        self.head_hash = l_hash
         self.all_chains = hash_len
 
     def update_chains(self,block):
