@@ -149,3 +149,30 @@ def check_fields(block,allowed_versions=[0],allowed_hashes=[''],trust=False):
         return False
 
     return True
+
+
+# Sends a block containing 'msg' to 'host' on 'port'
+def send_chat(self,msg,host,port):
+    #Specify all the URLs
+    URL = { 'head' : f"http://{host}:{port}/head",
+            'push' : f"http://{host}:{port}/push"}
+
+    # Grab the current head hash
+    head_hash = get(URL['head']).content.decode()
+
+    # Create the block
+    json_encoded_block = build_block(head_hash,{'chat' : msg},0)
+
+    # Build format to send over HTTP
+    push_data = {'block' : json_encoded_block}
+
+    # Send it
+    printc(f"\tSending block to {host}",TAN)
+    try:
+        data, post = http_post(URL['push'],push_data)
+        if post == 200:
+            printc(f"\tBlock sent successfully",GREEN)
+        else:
+            printc(f"\tCode recieved: {post}, data recieved: {data}",TAN)
+    except TypeError:
+        printc(f"\tRecieved Null response...",TAN)

@@ -258,7 +258,7 @@ class DynamicServer:
         self.all_chains = hash_len
 
     def update_chains(self,block):
-        block_hash = hash(block.encode())
+        block_hash = hash(dumps(block).encode())
 
         # This case we are adding to an existing chain
         if block['prev_hash'] in self.all_chains:
