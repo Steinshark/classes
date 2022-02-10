@@ -8,7 +8,7 @@ from os import listdir
 import argparse
 import sys
 
-#sys.path.append("C:\classes")
+sys.path.append("C:\classes")
 import Toolchain
 
 
@@ -226,7 +226,7 @@ class DynamicServer:
         self.longest_chain = longest
         self.longest_hash = l_hash
         self.all_chains = hash_to_info
-        
+
     def update_chains(block):
         pass
 
