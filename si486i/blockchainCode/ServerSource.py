@@ -229,6 +229,7 @@ class DynamicServer:
 
         # Set some dicts
         possible_hashes = grab_cached_hashes()
+        input(possible_hashes)
         hash_len = {}
         # This one's great, no?
         possible_hashes = {hash : loads(open(f"cache/{hash}.json",'r').read().strip())['prev_hash'] for hash in possible_hashes if not loads(open(f"cache/{hash}.json",'r').read().strip())['prev_hash'] in possible_hashes }
