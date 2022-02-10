@@ -196,7 +196,9 @@ class DynamicServer:
 
             else:
                 self.update_chains(block)
-                open(f'{hash(block.encode())}')
+                block_write_format = loads(block)
+                with open(f'{hash(block_write_format.encode())}','w') as file:
+                    file.write(block_write_format)
                 printc(f"\taccepted block",GREEN)
                 print('\n\n\n')
                 return f"{Color.GREEN}\tblock accepted!{Color.END}", 200
