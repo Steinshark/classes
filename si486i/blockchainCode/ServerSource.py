@@ -1,7 +1,7 @@
 import flask
 from BlockTools import *
 from BlockchainUtilities import *
-from os.path import isfilem isdir
+from os.path import isfile, isdir
 from fcntl import flock, LOCK_SH,LOCK_EX, LOCK_UN
 from json import dumps, loads
 from os import listdir, mkdir
