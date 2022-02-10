@@ -117,7 +117,7 @@ class DynamicServer:
                 printc(f"The genesis block was just called :)",GREEN)
                 self.write_current()
                 print("sending ")
-                return "", 200
+                return "OK", 200
             # Open, lock, read the head file, and send the info back
             with open('cache/current.json') as file :
                 flock(file,LOCK_SH)
@@ -127,7 +127,7 @@ class DynamicServer:
                 flock(file,LOCK_UN)
 
             # Can't imagine how this would not return 200
-            return self.head_hash, 200
+            return "OK",200
 
 
 
@@ -156,7 +156,7 @@ class DynamicServer:
                     flock(file,LOCK_SH)
                     block = file.read()
                     flock(file,LOCK_UN)
-                    return block, 200
+                    return "OK", 200
 
 
 
@@ -181,7 +181,7 @@ class DynamicServer:
 
             except JSONDecodeError as j:
                 printc(f"\terror decoding sent block",RED)
-                return "418"
+                return "bad decoding", 418
 
 ################################################################################
 #                    Check if the block fields are OK
@@ -192,7 +192,7 @@ class DynamicServer:
             if not check_fields(block,allowed_versions = [0],allowed_hashes=['']+grab_cached_hashes()):
                 printc(f"\trejected block",RED)
                 printc('\n\n\n',TAN)
-                return "418"
+                return "bad block", 418
 
             else:
                 block_write_format = dumps(block)
@@ -202,7 +202,7 @@ class DynamicServer:
                 self.update_chains(block)
                 print(self.all_chains)
                 print('\n\n\n')
-                return "200"
+                return "Accepted!"
 
 
 
