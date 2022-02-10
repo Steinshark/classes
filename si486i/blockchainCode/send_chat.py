@@ -77,7 +77,7 @@ class Node:
         for peer in self.peers:
 
             if self.peer_nodes[peer]['length'] < self.peer_nodes[self.top_peer]['length']:
-                printc(f"Updating peer",BLUE)
+                printc(f"Updating peer {peer}",BLUE)
                 self.update_peer_node_iterative(peer,self.peer_nodes[self.top_peer]['fetcher'].blockchain_download)
 
     def update_peer_node_iterative(self,host,full_blockchain):
@@ -90,7 +90,6 @@ class Node:
             try:
                 return_code = http_post(host, 5002, payload)
             except ConnectionException:
-                printc(f"Connection Error",RED)
                 continue
             if return_code == '200':
                 update_peer_node_iterative(host,stack)
