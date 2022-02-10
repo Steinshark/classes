@@ -275,7 +275,7 @@ class DynamicServer:
             self.longest_chain = info['length']
             self.head_hash = info['head']
             flock(file,LOCK_UN)
-        printc(f"\t\thead is now at {self.head_hash} of len {self.longest_chain}")
+        printc(f"\t\thead is now at {self.head_hash} of len {self.longest_chain}", GREEN)
         self.all_chains = hash_len
 
     def update_chains(self,block):
