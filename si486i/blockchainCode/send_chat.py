@@ -50,6 +50,9 @@ def send_block(msg):
             continue
         except ConnectionError:
             printc(f"\tError in get request on host {host}",RED)
+        except ConnectionRefusedError:
+            printc(f"\tError in get request on host {host}",RED)
+
 
         try:
             chatter = ChatService(host=host,port=5002)
