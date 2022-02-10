@@ -117,7 +117,7 @@ class DynamicServer:
                 printc(f"The genesis block was just called :)",GREEN)
                 self.write_current()
                 print("sending ")
-                return "OK", 200
+                return "", 200
             # Open, lock, read the head file, and send the info back
             with open('cache/current.json') as file :
                 flock(file,LOCK_SH)
@@ -127,7 +127,7 @@ class DynamicServer:
                 flock(file,LOCK_UN)
 
             # Can't imagine how this would not return 200
-            return "OK",200
+            return self.head_hash,200
 
 
 
