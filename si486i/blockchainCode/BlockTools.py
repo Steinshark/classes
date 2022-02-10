@@ -7,6 +7,14 @@ from requests import get, post,Timeout, RequestException
 from os.path import isfile, isdir, join
 from os import mkdir, listdir
 
+# Package import to work on windows and linux
+try:
+    sys.path.append("C:\classes")
+    sys.path.append("D:\classes")
+    from Toolchain.terminal import *
+except ModuleNotFoundError:
+    sys.path.append("/home/m226252/classes")
+    from Toolchain.terminal import *
 
 #########################################################################################
 ############################ FUNCTIONS FOR PROCESSING BLOCKS ############################
@@ -97,8 +105,10 @@ def iter_local_chain(hash):
     while not hash == '':
         length += 1
         try:
-            hash = loads(open(f"{hash}.json"))['prev_hash']
+            file = f"cache/{hash}.json"
+            hash = loads(open(file))['prev_hash']
         except FileNotFoundError:
+            printc(f"\t\t{file} was not found in cache",RED)
             return length
     return length
 #########################################################################################
