@@ -240,7 +240,7 @@ class DynamicServer:
             if bl > longest:
                 longest = bl
                 l_hash = hash
-        printc(f"\t\tFound {len(possible_hashes} chains",TAN)
+        printc(f"\t\tFound {len(possible_hashes)} chains",TAN)
         printc(f"\t\tLongest chain: {longest} block",TAN)
 
         self.empty = not possible_hashes
