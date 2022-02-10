@@ -3,7 +3,7 @@
 #########################################################################################
 from hashlib import sha256, sha3_256
 from json import loads, dumps, JSONDecodeError
-from requests import get, post, Timeout 
+from requests import get, post, Timeout
 from BlockTools import *
 from BlockchainErrors import *
 from os.path import isfile, isdir, join
@@ -67,8 +67,7 @@ def get_blockchain(hostname='cat',port='5000',caching=False,cache_location='cach
                 block = retrieve_block(block_hash,host=hostname,port=port)
                 block = loads(block)
             except JSONDecodeError as j:
-                print(f"{Color.RED}Error decoding JSON text fetched from server: {block[:30]}{Color.END}")
-                raise BlockChainError(j)
+                raise BlockChainError(f"{Color.RED}Error decoding JSON text fetched from server: {block[:30]}{Color.END}")
             except HashRetrievalException as h:
                 print(h)
                 raise BlockChainError(h)
