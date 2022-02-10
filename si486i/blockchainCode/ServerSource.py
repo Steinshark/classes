@@ -8,13 +8,14 @@ from os import listdir
 import argparse
 import sys
 
+# Package import to work on windows and linux
 try:
     sys.path.append("C:\classes")
-    import Toolchain
+    sys.path.append("D:\classes")
+    from Toolchain import *
 except ModuleNotFoundError:
     sys.path.append("/home/m226252/classes")
-    print(sys.path)
-    import Toolchain
+    from Toolchain import *
 
 
 
@@ -91,7 +92,6 @@ class DynamicServer:
         self.head_hash = None                   # Keep track of whats in current
         self.longest_chain = 0                  # This will be used as a dynamic
                                                 #                 'current.json'
-
         self.scan_chains()                      # Builds the initial chains list
 
 
@@ -138,7 +138,7 @@ class DynamicServer:
 
             # Handle an error - 404 == not found here
             if not isfile(filename):
-                return f'{filename} not found in cache', 404
+                return f'{RED}{filename} not found in cache{RED}', 404
 
             # Open up that file up (with locks!) and shoot it back to them
             else:
