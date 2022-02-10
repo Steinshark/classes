@@ -91,6 +91,7 @@ class Node:
                 return_code = http_post(host, 5002, payload)
             except ConnectionException:
                 continue
+                
             if return_code == '200':
                 update_peer_node_iterative(host,stack)
                 printc(f"Block accepted! Trying next block in current chain",GREEN)
