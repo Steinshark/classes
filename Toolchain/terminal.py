@@ -9,5 +9,5 @@ BOLD = '\033[1m'
 UNDERLINE = '\033[4m'
 
 
-def printc(s,color,endl='/n'):
+def printc(s,color,endl='\n'):
     print(f"{color}{s}{END}",end=endl)
