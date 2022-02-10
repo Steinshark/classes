@@ -54,7 +54,7 @@ def send_block(msg):
             if chatter.info['length'] >= longest_chain_len:
                 longest_chain_len = chatter.info['length']
         except BlockChainRetrievalError as b:
-            printc(f\f"{b}",TAN)
+            printc(f"\t{b}",TAN)
             printc(f"\tError in fetch blockchain on host {host}", RED)
 
     printc(f"longest chain is len: {longest_chain_len}",BLUE)
