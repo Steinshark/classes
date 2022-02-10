@@ -124,15 +124,14 @@ def check_fields(block,allowed_versions=[0],allowed_hashes=[''],trust=False):
     # Ensure 'version' field checks out
     if (not 'version' in block) or\
        (not block['version'] in allowed_versions):
-       print("bad version")
+        print("bad version")
         return False
 
 
     # Ensure 'prev_hash' field checks out
     elif (not 'prev_hash' in block) or\
          (not block['prev_hash'] in allowed_hashes):
-       print("bad hash")
-
+        print("bad hash")
         return False
 
 
@@ -140,7 +139,7 @@ def check_fields(block,allowed_versions=[0],allowed_hashes=[''],trust=False):
     elif (not 'payload' in block) or\
          (not isinstance(block['payload'],dict)) or\
          (('chat' in block['payload']) and (not isinstance(block['payload']['chat'],str))):
-         print("bad payload")
+        print("bad payload")
         return False
 
 
