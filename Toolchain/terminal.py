@@ -10,4 +10,4 @@ UNDERLINE = '\033[4m'
 
 
 def printc(s,color,endl='\n'):
-    print(f"{color}{s}{END}",end=endl)
+    print(f"{color}{s}{END}",end=endl,flush=True)

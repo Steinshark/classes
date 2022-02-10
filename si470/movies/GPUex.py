@@ -5,13 +5,15 @@ import numpy as np
 import os
 import sys
 from time import time
+import pprint
+
 times = {'start' : time()}
 # Package import to work on windows and linux
 try:
-    sys.path.append("C:\classes")
     sys.path.append("D:\classes")
+    sys.path.append("C:\classes")
     from Toolchain.terminal import *
-    from Toolchain.DataTools import GPU_euclidean_dist
+    from Toolchain.GPUTools import euclidean_distance, slice_col_sparse
 except ModuleNotFoundError:
     sys.path.append("/home/m226252/classes")
     from Toolchain.terminal import *
@@ -63,17 +65,31 @@ for col in headers:
     col_mean = usna[col].mean()
     usna[col].fillna(value=col_mean,inplace = True)
 
+################################################################################
+#                           Gather constants
+################################################################################
+#                                                   # dataset                           # column        #index
+n_movies                            = int(  len(    dataframes['large']['movies']       ['movieId']                 ))
+n_users                             = int(          dataframes['large']['ratings']      ['userId'].iloc      [-1]        )
 
-users = usna.values.tolist()
 
+################################################################################
+#                           Convert USNA matrix to Workable Sparse Tensor
+################################################################################
 
+# Constant to have on hand
+user_liked = [122906,96588,179819,175303,168326,177615,6539,79091,161644,115149,60397,192283,177593,8961]
+#
+## Split rows to lists (of ratings)
+#users = usna.values.tolist()
+#usna_matrices = []
+#
+## Fill
+#for row in users:
+#    vals = tf.convert_to_tensor(row,dtype=tf.dtypes.float16)
+#    user_matrix = tf.sparse.SparseTensor(       indices = usna_movie_indexes,     values = vals,   dense_shape = [n_movies] )
+#    usna_matrices.append(user_matrix)
 
-usna_movies_convert = [122906,96588,179819,175303,168326,177615,6539,79091,161644,115149,60397,192283,177593,8961]
-
-usna_responses = {i : tf.convert_to_tensor([tf.constant([x,y],dtype=tf.dtypes.int64) for x,y in zip(usna_movies_convert,ratings)],dtype=tf.dtypes.int64) for i, ratings in enumerate(users)}
-from pprint import pp
-pp(usna_responses)
-input()
 
 
 ################################################################################
@@ -87,16 +103,6 @@ input()
 #                           Define a dictonary to map neighbors
 ###############################################################################
 
-
-
-
-
-################################################################################
-#                           Gather constants
-################################################################################
-#                                                   # dataset                           # column        #index
-n_movies                            = int(  len(    dataframes['large']['movies']       ['movieId']                 ))
-n_users                             = int(          dataframes['large']['ratings']      ['userId'].iloc      [-1]        )
 
 ################################################################################
 #                           Show Data
@@ -117,17 +123,15 @@ printc(f"Building Index and Value Tensors\n\n",GREEN)
 t1 = time()
 # Set x,y index arrays and build index tensor (2,x)
 matrix_x = tf.convert_to_tensor(df['userId'],dtype=tf.dtypes.int64)
-input(matrix_x)
 matrix_y = tf.convert_to_tensor(df['movieId'],dtype=tf.dtypes.int64)
 index = tf.stack([matrix_x,matrix_y],axis=1)
-input(index)
 # Build value tensor
 value = tf.convert_to_tensor(df['rating'],dtype=tf.dtypes.float16)
 value = tf.transpose(value)
 
 # Info
-printc(f"Finished Tensor build in {(time()-t1):.3f} seconds",GREEN)
-printc(f"\tindices: {index.shape}\n\tvalue: {value.shape}",GREEN)
+printc(f"Finished Tensor build in\t{(time()-t1):.3f} seconds",GREEN)
+printc(f"\tindices:\t{index.shape}\n\tvalue: {value.shape}",GREEN)
 
 
 ################################################################################
@@ -139,11 +143,10 @@ matrix = tf.sparse.SparseTensor(indices=index,values=value,dense_shape=[matrix_y
 ################################################################################
 #                           Define a dictonary to map neighbors
 ###############################################################################
-movie = {
-                movieId     :   0 for movieId in dataframes['large']['movies']
+closest_movies = {
+                movieId     :   {'movie' : 0, 'distance' : 0} for movieId in user_liked
 }
 
-printc(f"{movie}",TAN)
 
 
 
@@ -152,10 +155,22 @@ printc(f"{movie}",TAN)
 #                           get slices
 ###############################################################################
 
+for id in user_liked:
+    # The movie we know we like
+    this_movie = slice_col_sparse(matrix,id)
 
-for movieId in range(n_movies):
-    column_matrix_sparse    =       tf.sparse.slice(    matrix,     [0,movieId],     [n_users,1])
-    column_matrix           =       tf.sparse.to_dense(column_matrix_sparse)
+    for movieId in list(range(n_movies)) not in [id] not in list(closest_movies.keys()):
+        # movie to check
+        column = slice_col_sparse(matrix,movieId)
 
-    print(f"{euclidean_distance()}")
-    printc(f"{column_matrix}",TAN)
+        # check
+        distance = euclidean_distance(column,this_movie)
+
+        if distance < closest_movies[id]['distance']:
+            closest_movies[id]['movie']    = movieId
+            closest_movies[id]['distance'] = distance
+
+
+
+with open("output",'w') as file:
+    file.write(pprint.pformat(closest_movies))
