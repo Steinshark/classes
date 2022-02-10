@@ -283,6 +283,7 @@ class DynamicServer:
                 print("CHain updated")
                 self.head_hash = block_hash
                 self.longest_chain += 1
+                self.empty = False
                 self.write_current()
 
         # This case we are creating a chain
@@ -295,6 +296,7 @@ class DynamicServer:
                 print("CHain updated")
                 self.head_hash = block_hash
                 self.longest_chain += 1
+                self.empty = False
                 self.write_current()
 
     def write_current(self):
