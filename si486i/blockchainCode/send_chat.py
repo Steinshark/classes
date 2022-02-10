@@ -48,6 +48,9 @@ def send_block(msg):
         except BlockChainVerifyError:
             printc(f"\tError in get request on host {host}",RED)
             continue
+        except ConnectionError:
+            printc(f"\tError in get request on host {host}",RED)
+
         try:
             chatter = ChatService(host=host,port=5002)
             chatter.fetch_blockchain()
