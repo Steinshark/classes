@@ -37,6 +37,7 @@ def send_block(msg):
     hosts = {}
     chain   = {}
     longest_chain_len = 0
+    head_hash = {}
     # Compile a list of all the head_hashes
     printc(f"Scanning hosts for chain lengths",BLUE)
     for host in open('hosts.txt').readlines():
