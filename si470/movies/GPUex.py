@@ -28,12 +28,15 @@ tf.debugging.set_log_device_placement(True)
 #                           DATASET NAME DEFINITIONS
 ################################################################################
 
-datasets = {    'small'     :  {'movies' : join('ml-latest-small','movies.csv') , 'ratings' : join("ml-latest-small","ratings.csv") , 'tags' : join("ml-latest-small","tags.csv")},
-                'large'     :  {'movies' : join("ml-latest","movies.csv")       , 'ratings' : join("ml-latest","ratings.csv")       , 'tags' : join('ml-latest',"tags.csv")}}
+datasets = {    'small'     :  {'movies'        : join('ml-latest-small','movies.csv') , 'ratings' : join("ml-latest-small","ratings.csv") , 'tags' : join("ml-latest-small","tags.csv")},
+                'large'     :  {'movies'        : join("ml-latest","movies.csv")       , 'ratings' : join("ml-latest","ratings.csv")       , 'tags' : join('ml-latest',"tags.csv")},
+                'usna'      :  {'foodMovies'   : 'foodAndMovies.csv'}}
 
-dataframes= {   'small'     :  {'movies' : None, 'ratings' :  None, 'tags' : None},
-                'large'     :  {'movies' : None, 'ratings' :  None, 'tags' : None}}
+dataframes= {   'small'     :  {'movies'        : None, 'ratings' :  None, 'tags' : None},
+                'large'     :  {'movies'        : None, 'ratings' :  None, 'tags' : None}}
 
+
+headers = ["Black Panther","Pitch Perfect","Star Wars: The Last Jedi","It","The Big Sick","Lady Bird","Pirates of the Caribbean","Despicable Me","Coco","John Wick","Mamma Mia","Crazy Rich Asians","Three Billboards Outside Ebbings, Missouri","The Incredibles"]
 ################################################################################
 #                           Read into DataFrame
 ################################################################################
@@ -41,23 +44,40 @@ printc(f"BEGIN: Data read from CSV",BLUE)
 times['dread_s'] = time()
 for size in datasets:
     for dset in datasets[size]:
-        if not (size == 'large' and set == 'ratings'):
+        if not (size == 'large' and set == 'ratings') and not (size == 'usna' and dset == 'foodMovies'):
             printc(f"\treading {dset}-{size}",TAN,endl='')
             dataframes[size][dset]   = pd.read_csv(datasets[size][dset],sep=',')
 
             printc(f"\tsize: {(dataframes[size][dset].memory_usage().sum() / (1024.0*1024.0)):.2f} MB",TAN)
+
 ################################################################################
 #                           Read into DataFrame
 ################################################################################
+
 printc(f"\treading ratings-large",TAN)
 f_64 = np.float64
 df                                  = pd.read_csv(  datasets['large']['ratings'],   sep = ',',dtype={'userId':f_64,'movieId':f_64,'rating':f_64, 'timestamp':f_64})
+usna                                = pd.read_csv(  datasets['usna']['foodMovies'],   sep = ',')
+usna                                = usna[headers]
+for col in headers:
+    col_mean = usna[col].mean()
+    usna[col].fillna(value=col_mean,inplace = True)
 
-printc(f"Finished Data read in {time()-times['dread_s']:.3f} seconds",GREEN)
+
+users = usna.values.tolist()
+
+
+
+usna_movies_convert = [122906,96588,179819,175303,168326,177615,6539,79091,161644,115149,60397,192283,177593,8961]
+
+usna_responses = {i : tf.convert_to_tensor([tf.constant([x,y],dtype=tf.dtypes.int64) for x,y in zip(usna_movies_convert,ratings)],dtype=tf.dtypes.int64) for i, ratings in enumerate(users)}
+from pprint import pp
+pp(usna_responses)
+input()
 
 
 ################################################################################
-#                           Get USNA Movies 
+#                           Get USNA Movies
 ###############################################################################
 
 
@@ -126,24 +146,6 @@ movie = {
 printc(f"{movie}",TAN)
 
 
-
-
-usna_movies = {
-    "Black Panther"                              :  122906,
-    "Pitch Perfect"                              :  96588,
-    "Star Wars: The Last Jedi"                   :  179819,
-    "It"                                         :  175303,
-    "The Big Sick"                               :  168326,
-    "Lady Bird"                                  :  177615,
-    "Pirates of the Caribbean"                   :  6539,
-    "Despicable Me"                              :  79091,
-    "Coco"                                       :  161644,
-    "John Wick"                                  :  115149,
-    "Mamma Mia"                                  :  60397,
-    "Crazy Rich Asians"                          :  192283,
-    "Three Billboards Outside Ebbings, Missouri" :  177593,
-    "The Incredibles"                            :  8961
-}
 
 
 ################################################################################
