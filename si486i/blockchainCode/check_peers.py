@@ -15,8 +15,9 @@ hosts = [line.strip() for line in open('hosts.txt').readlines()]
 ports = ["5000","5001","5002"]
 
 for host in hosts:
-    printc(f"attempting conneciton to {host} on port {port}",BLUE)
+    printc(f"attempting conneciton to {host} on port",BLUE,endl='')
     for port in ports:
+        printc(f"{port}",BLUE)
         try:
             blockchain_download = get_blockchain(host,port)
             size = len(blockchain_download)
