@@ -260,8 +260,9 @@ class DynamicServer:
         print(len(possible_hashes))
         self.empty = not possible_hashes
         input(self.empty)
-        self.longest_chain = longest
-        self.head_hash = l_hash
+        if not self.empty:
+            self.longest_chain = longest
+            self.head_hash = l_hash
         self.all_chains = hash_len
 
     def update_chains(self,block):
