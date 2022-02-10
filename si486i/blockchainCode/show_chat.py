@@ -9,7 +9,7 @@ from fcntl import flock, LOCK_SH,LOCK_EX, LOCK_UN
 CHECKPOINT_FILE = 'cache/current.json'
 
 
-class ChatService:
+class FetchService:
     def __init__(self,host=None,port=-1):
         self.format_parser()
         if (not host == None) and (not port == -1):
@@ -82,7 +82,7 @@ class ChatService:
 if __name__ == '__main__':
 
     # Create an instance of the class
-    instance = ChatService()
+    instance = FetchService()
 
     # Format the arguments
     instance.format_parser()

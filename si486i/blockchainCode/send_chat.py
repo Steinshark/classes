@@ -18,9 +18,11 @@ except ModuleNotFoundError:
 class Node:
 
     def __init__(self):
-        self.hosts = list(map(lambda x : x.strip(),open("hosts.txt",'r').readlines()))
-        print(self.hosts)
-        input()
+        self.peers = list(map(lambda x : x.strip(),open("hosts.txt",'r').readlines()))
+        self.peer_nodes = {host : {'length' : 0, 'host' : None, 'fetcher' : None, 'head' : None} for host in self.hosts}
+
+        self.top_peer = self.peers[0]
+        self.check_peer_servers()
 
     def send_chat(self,msg,host,port):
         #Specify all the URLs
@@ -48,46 +50,52 @@ class Node:
             printc(f"\tRecieved Null response...",TAN)
 
     def check_peer_servers(self,msg):
-        hosts = {}
-        chain   = {}
-        longest_chain_len = 0
-        head_hash = {}
-        # Compile a list of all the head_hashes
-        printc(f"Scanning hosts for chain lengths",BLUE)
-        for host in open('hosts.txt').readlines():
+
+        # Checkk the state of all peer nodes
+        printc(f"Checking Peer Nodes",BLUE)
+        for host in self.peers:
+            # Info
             printc(f"\tTrying to connect to host: {host}", TAN)
+
+            # Attempt to get the head hash that the peer is on
             try:
-                host = host.strip()
-                head_hash[host] = get(f"http://{host}:5002/head", timeout=3).content.decode()
-            except BlockChainVerifyError:
-                printc(f"\tError in get request on host {host}",RED)
-                continue
+                head_hash = get(f"http://{host}:5002/head", timeout=3).content.decode()
+                self.peer_nodes[host]['head'] = head_hash
+
             except ConnectionError:
-                printc(f"\tError in get request on host {host}",RED)
+                printc(f"\tError in get request on host {host} - unknown reason",RED)
+                continue
+
             except ConnectionRefusedError:
-                printc(f"\tError in get request on host {host}",RED)
+                printc(f"\tError in get request on host {host} - refused",RED)
+                continue
 
-
+            # Attempt to fetch the blockchain of that node
             try:
-                chatter = ChatService(host=host,port=5002)
-                chatter.fetch_blockchain()
-                hosts[host] = chatter
-                blockchain_len = chatter.info['length']
+                # Grab the blockchain
+                node_fetcher = FetchService(host=host,port=5002)
+                node_fetcher.fetch_blockchain()
+
+                # Assign the fetcher to the node
+                self.peer_nodes[host]['fetcher'] = node_fetcher
+
+                # Get info on the chain
+                self.peer_nodes[host]['length'] = node_fetcher.info['length']
+
+                # Info
                 printc(f"\tConnection to {host} succeeded! Chain of length {blockchain_len} found\n\n",GREEN)
-                if chatter.info['length'] >= longest_chain_len:
-                    longest_chain_len = chatter.info['length']
+
+                # Update global chain tracker
+                if self.peer_nodes[host]['length'] >= self.peer_nodes[self.top_peer]['length']:
+                    self.top_peer = self.peer_nodes[host]['length']
 
             except BlockChainRetrievalError as b:
                 printc(f"\t{b}",TAN)
                 printc(f"\tError in fetch blockchain on host {host}", RED)
+                continue
 
-        printc(f"longest chain is len: {longest_chain_len}",BLUE)
-        printc(f"Sending out blocks",BLUE)
+        printc(f"longest chain is len: {self.peer_nodes[self.top_peer]['length']} on host {self.top_peer}",BLUE)
 
-        for host in hosts:
-            if hosts[host].info['length'] >= longest_chain_len:
-
-                send_chat(msg,host,5002)
 
 
 if __name__ == "__main__":
