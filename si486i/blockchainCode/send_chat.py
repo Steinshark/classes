@@ -44,7 +44,7 @@ def send_block(msg):
         try:
             host = host.strip()
             head_hashes[host] = get(f"http://{host}:5002/head", timeout=3).content.decode()
-        except:
+        except BlockChainVerifyError:
             printc(f"\tError in get request on host {host}",RED)
             continue
         try:
