@@ -73,8 +73,9 @@ def retrieve_block(hash_decoded,host="cat",port="5000",timeout=3):
 
 
 # Wrapper function for post
-def http_post(url,payload,timeout=5):
+def http_post(host,port,payload,timeout=5):
     try:
+        url = f"https://{host}:{port}/push"
         post(url,data=payload,timeout=timeout)
     except Timeout:
         raise ConnectionException(f"{Color.RED}error: timeout requesting response from {url}")

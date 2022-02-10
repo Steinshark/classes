@@ -72,10 +72,30 @@ class Node:
 
         printc(f"longest chain is len: {self.peer_nodes[self.top_peer]['length']} on host {self.top_peer}",BLUE)
 
-    def update_peer_node_iterative(self,host,full_blockchain,peer_head_hash):
+
+    def update_peers(self):
+        for peer in self.peers:
+            update_peer_node_iterative(self,peer,self.top_peer[fetcher].blockchain_download)
+
+    def update_peer_node_iterative(self,host,full_blockchain):
+        stack = []
+
         for (hash,block) in full_blockchain:
-            post_data = {'block' : block_to_JSON(block)}
+
+            payload = {'block' : block_to_JSON(block)}
+
+            return_code = http_post(host, 5002, payload)
+
+            if return_code == '200':
+                update_peer_node_iterative(host,stack)
+                printc(f"Block accepted! Trying next block in current chain",GREEN)
+            else:
+                printc(f"received code {return_code}, trying next block",TAN)
+                continue
+
+        printc(f"Finished trying to push chain",TAN)
 
 
 if __name__ == "__main__":
     n = Node()
+    n.update_peer_node_iterative()
