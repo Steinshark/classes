@@ -63,11 +63,11 @@ class Node:
                 self.peer_nodes[host]['head'] = head_hash
 
             except ConnectionError:
-                printc(f"\tError in get request on host {host} - unknown reason",RED)
+                printc(f"\tError in get request on host {host} - unknown reason\n\n",RED)
                 continue
 
             except ConnectionRefusedError:
-                printc(f"\tError in get request on host {host} - refused",RED)
+                printc(f"\tError in get request on host {host} - refused\n\n",RED)
                 continue
 
             # Attempt to fetch the blockchain of that node
@@ -88,11 +88,11 @@ class Node:
 
                 # Update global chain tracker
                 if node_chain_len >= self.peer_nodes[self.top_peer]['length']:
-                    self.top_peer = node_chain_len
+                    self.top_peer = host
 
             except BlockChainRetrievalError as b:
                 printc(f"\t{b}",TAN)
-                printc(f"\tError in fetch blockchain on host {host}", RED)
+                printc(f"\tError in fetch blockchain on host {host}\n\n", RED)
                 continue
 
         printc(f"longest chain is len: {self.peer_nodes[self.top_peer]['length']} on host {self.top_peer}",BLUE)
