@@ -196,7 +196,7 @@ class DynamicServer:
 
             else:
                 block_write_format = dumps(block)
-                with open(f'cache/{hash(block_write_format.encode())}','w') as file:
+                with open(f'cache/{hash(block_write_format.encode())}.json','w') as file:
                     file.write(block_write_format)
                 printc(f"\taccepted block",GREEN)
                 self.update_chains(block)
