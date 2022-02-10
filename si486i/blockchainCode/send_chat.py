@@ -19,7 +19,7 @@ class Node:
 
     def __init__(self):
         self.peers = list(map(lambda x : x.strip(),open("hosts.txt",'r').readlines()))
-        self.peer_nodes = {host : {'length' : 0, 'host' : None, 'fetcher' : None, 'head' : None} for host in self.hosts}
+        self.peer_nodes = {host : {'length' : 0, 'host' : None, 'fetcher' : None, 'head' : None} for host in self.peers}
 
         self.top_peer = self.peers[0]
         self.check_peer_servers()
