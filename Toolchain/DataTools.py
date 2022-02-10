@@ -7,9 +7,10 @@ import pandas
 from time                               import time
 import os
 # GPU RELATED IMPORTS
-
+import tensorflow as tf
 from .terminal import *
 import torch
+
 
 def read_from_file(file,matrix,docwords,lines=None):
     line_n = 0
@@ -101,6 +102,7 @@ def load_data(vocab_file="vocab.nytimes.txt",dataset_file='docword.nytimes.txt',
         matrix = cupy.sparse.csr_matrix(matrix)
     return matrix, docwords
 
+
 def svd_decomp(matrix_type='sparse',n=10,matrix=None):
     printc(f"Starting: Data Decomposition",BLUE)
     times = {'start' : time()}
@@ -124,6 +126,7 @@ def svd_decomp(matrix_type='sparse',n=10,matrix=None):
 
     return matrix_reduced, time()-times['start']
 
+
 def PCA_decomp(matrix_type='sparse',n=10,matrix=None):
     printc(f"Starting: Data Decomposition",BLUE)
     times = {'start' : time()}
@@ -144,6 +147,7 @@ def PCA_decomp(matrix_type='sparse',n=10,matrix=None):
         return fitted_data,model, time()-times['fit']
     else:
         return None, model
+
 
 def run_kmeans_verbose(matrix,move):
     t1 = time()
@@ -168,6 +172,7 @@ def run_kmeans_verbose(matrix,move):
         printc(f"\t\tFinished model in {time()-t2} seconds",GREEN)
 
     return models
+
 
 def rmse(A,B):
     printc(f"A: {A.shape}, B: {B.shape}",RED)

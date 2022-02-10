@@ -14,9 +14,14 @@ except ModuleNotFoundError:
     sys.path.append("/home/m226252/classes")
     from Toolchain.terminal import *
 
+
+################################################################################
+#                           Manage Logging
+################################################################################
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
 printc(f"Num GPUs Available: {len(tf.config.list_physical_devices('GPU'))}\n\n",GREEN)
 tf.debugging.set_log_device_placement(True)
+
 ################################################################################
 #                           DATASET NAME DEFINITIONS
 ################################################################################
@@ -43,12 +48,11 @@ printc(f"{df.head()}\n\n",TAN)
 
 printc(f"Building Index and Value Tensors\n\n",GREEN)
 t1 = time()
-# Set x,y index arrays 
+# Set x,y index arrays and build index tensor (2,x)
 matrix_x = tf.convert_to_tensor(df['movieId'])
 matrix_y = tf.convert_to_tensor(df['userId'])
-
-# Build index tensor
 index = tf.stack([matrix_x,matrix_y],axis=1)
+
 
 # Build value tensor
 value = tf.convert_to_tensor(df['rating'])
@@ -60,15 +64,11 @@ printc(f"\tindices: {index.shape}\n\tvalue: {value.shape}",GREEN)
 
 
 ################################################################################
-#                           Build Sparse Matrix 
+#                           Build Sparse Matrix
 ################################################################################
 
 matrix = tf.sparse.SparseTensor(indices=index,values=value,dense_shape=[matrix_y.shape[0],matrix_x.shape[0]])
 
 ################################################################################
-#                           Define function for                          
+#                           Define function for Euclidean
 ###############################################################################
-
-
-
-
