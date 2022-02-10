@@ -40,35 +40,13 @@ printc(f"{df.head()}\n\n",TAN)
 ################################################################################
 #                           Build Matrix indices and values
 ################################################################################
-
 printc(f"Building Index and Value Tensors\n\n",GREEN)
 t1 = time()
-# Set x,y index arrays 
 matrix_x = tf.convert_to_tensor(df['movieId'])
 matrix_y = tf.convert_to_tensor(df['userId'])
-
-# Build index tensor
 index = tf.stack([matrix_x,matrix_y],axis=1)
-
-# Build value tensor
 value = tf.convert_to_tensor(df['rating'])
-value = tf.transpose(value)
-
-# Info
 printc(f"Finished Tensor build in {(time()-t1):.3f} seconds",GREEN)
 printc(f"\tindices: {index.shape}\n\tvalue: {value.shape}",GREEN)
 
-
-################################################################################
-#                           Build Sparse Matrix 
-################################################################################
-
-matrix = tf.sparse.SparseTensor(indices=index,values=value,dense_shape=[matrix_y.shape[0],matrix_x.shape[0]])
-
-################################################################################
-#                           Define function for                          
-###############################################################################
-
-
-
-
+matrix = tf.sparse.SparseTensor(indices=index,values=tf.transpose(value),dense_shape=[matrix_y.shape[0],matrix_x.shape[0]])
