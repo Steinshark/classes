@@ -89,7 +89,7 @@ class Node:
 
             try:
                 return_code = http_post(host, 5002, payload)
-            except ConnectionError:
+            except ConnectionException:
                 printc(f"Connection Error",RED)
             if return_code == '200':
                 update_peer_node_iterative(host,stack)
