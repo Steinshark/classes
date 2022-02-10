@@ -96,6 +96,7 @@ class DynamicServer:
         self.longest_chain = 0                  # This will be used as a dynamic
                                                 #                 'current.json'
         self.scan_chains()                      # Builds the initial chains list
+        printc(f"INIT DONE - STARTING\n\n\n",GREEN)
 
 
 
