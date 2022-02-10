@@ -231,7 +231,7 @@ class DynamicServer:
                 possible_hashes.append(hash)
                 with open(f"cache/{file}",'r') as f:
                     prev_hash = loads(f.read().strip())['prev_hash']
-                    printc(f"\t\thash {hash} maps to {prev_hash}",TAN)
+                    printc(f"\t\thash {hash[:20]}... maps to {prev_hash[:20]}..",TAN)
 
 
         for not_possible_end_hash in hashes_to_prev_hash.values():
