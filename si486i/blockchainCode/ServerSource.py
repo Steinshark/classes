@@ -181,7 +181,7 @@ class DynamicServer:
 
             except JSONDecodeError as j:
                 printc(f"\terror decoding sent block",RED)
-                return f"{Color.RED}\tblock rejected - check your block encoding!{Color.END}", 400
+                return "418"
 
 ################################################################################
 #                    Check if the block fields are OK
@@ -192,7 +192,7 @@ class DynamicServer:
             if not check_fields(block,allowed_versions = [0],allowed_hashes=['']+grab_cached_hashes()):
                 printc(f"\trejected block",RED)
                 printc('\n\n\n',TAN)
-                return "413"
+                return "418"
 
             else:
                 block_write_format = dumps(block)
