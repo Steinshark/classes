@@ -30,9 +30,15 @@ def send_chat(msg,host,port):
     push_data = {'block' : json_encoded_block}
 
     # Send it
-    data, post = http_post(URL['push'],push_data)
+    printc(f"Sending block to {host}",TAN)
+    try:
+        data, post = http_post(URL['push'],push_data)
+    except TypeError:
+        printc(f"Recieved Null response...",TAN)
     if post == 200:
-        printc(f"\tBlock sent successfully",GREEN)
+        printc(f"Block sent successfully",GREEN)
+    else:
+        printc(f"Code recieved: {post}, data recieved: {data}",TAN)
 
 def send_block(msg):
     hosts = {}
@@ -59,8 +65,11 @@ def send_block(msg):
             chatter = ChatService(host=host,port=5002)
             chatter.fetch_blockchain()
             hosts[host] = chatter
+            blockchain_len = chatter.info['length']
+            printc(f"\tConnection to {host} succeeded! Chain of length {blockchain_len} found\n\n",GREEN)
             if chatter.info['length'] >= longest_chain_len:
                 longest_chain_len = chatter.info['length']
+
         except BlockChainRetrievalError as b:
             printc(f"\t{b}",TAN)
             printc(f"\tError in fetch blockchain on host {host}", RED)
