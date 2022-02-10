@@ -185,7 +185,7 @@ class DynamicServer:
 ################################################################################
 #                    Check if the block fields are OK
 
-            if not check_fields(block,allowed_versions = [0],allowed_hashes=['']+grab_cached_hashes(cache_location='cache')):
+            if not check_fields(block,allowed_versions = [0],allowed_hashes=['']+grab_cached_hashes()):
                 printc(f"\trejected block",RED)
                 printc('\n\n\n',TAN)
                 return f"{Color.RED}\tblock rejected!{Color.END}", 400
