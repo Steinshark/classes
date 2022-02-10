@@ -187,7 +187,7 @@ class DynamicServer:
 #                    Check if the block fields are OK
             print(block['prev_hash'])
             print(self.head_hash)
-            print(block['prev_hash'] == self.head_hash)
+            print(f"equals head? -> {block['prev_hash'] == self.head_hash}")
 
             if not check_fields(block,allowed_versions = [0],allowed_hashes=['']+grab_cached_hashes()):
                 printc(f"\trejected block",RED)
@@ -196,7 +196,7 @@ class DynamicServer:
 
             else:
                 block_write_format = dumps(block)
-                with open(f'{hash(block_write_format.encode())}','w') as file:
+                with open(f'cache/{hash(block_write_format.encode())}','w') as file:
                     file.write(block_write_format)
                 printc(f"\taccepted block",GREEN)
                 self.update_chains(block)
@@ -280,7 +280,6 @@ class DynamicServer:
 
             # If this makes a new longest chain, update file
             if self.all_chains[block_hash] > self.longest_chain:
-                print("CHain updated")
                 self.head_hash = block_hash
                 self.longest_chain += 1
                 self.empty = False
@@ -293,7 +292,6 @@ class DynamicServer:
 
             # Check if its the longest (Aka first block)
             if self.all_chains[block_hash] > self.longest_chain:
-                print("CHain updated")
                 self.head_hash = block_hash
                 self.longest_chain += 1
                 self.empty = False
