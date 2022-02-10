@@ -152,7 +152,7 @@ def check_fields(block,allowed_versions=[0],allowed_hashes=[''],trust=False):
 
 
 # Sends a block containing 'msg' to 'host' on 'port'
-def send_chat(self,msg,host,port):
+def send_chat(msg,host,port):
     #Specify all the URLs
     URL = { 'head' : f"http://{host}:{port}/head",
             'push' : f"http://{host}:{port}/push"}

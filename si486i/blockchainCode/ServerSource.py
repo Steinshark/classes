@@ -168,6 +168,7 @@ class DynamicServer:
         @self.app.route('/push', methods=['POST'])
         def push_block():
             received_data = flask.request.form
+            princt(f"\twhile head is {self.head_hash}")
             printc(f"\trecieved '{str(received_data)[:35]} ... {str(received_data)[-20:]}'",TAN)
 
 ################################################################################
@@ -254,7 +255,7 @@ class DynamicServer:
 
         self.empty = not possible_hashes
         self.longest_chain = longest
-        self.longest_hash = l_hash
+        self.head_hash = longest_hash
         self.all_chains = hash_len
 
     def update_chains(self,block):

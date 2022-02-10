@@ -117,7 +117,3 @@ def verify_blockchain(blockchain):
         if not check_fields(block,allowed_hashes=[prev_hash]):
             raise BlockChainVerifyError(f"{Color.RED}Error: bad block found in position {index}{Color.END}")
     return len(blockchain)
-
-
-def update_peer_node_iterative(host,full_blockchain,peer_head_hash):
-    send
