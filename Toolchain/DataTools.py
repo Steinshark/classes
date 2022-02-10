@@ -5,12 +5,11 @@ import numpy
 import pandas
 
 from time                               import time
-from colors                             import *
 import os
 # GPU RELATED IMPORTS
 
 from .terminal import *
-import torch 
+import torch
 
 def read_from_file(file,matrix,docwords,lines=None):
     line_n = 0
