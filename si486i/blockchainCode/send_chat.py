@@ -1,7 +1,7 @@
 from BlockTools import *
 from BlockchainErrors import *
 from json import dumps
-from show_chat import ChatService
+from show_chat import FetchService
 from requests import get
 from requests.exceptions import ConnectionError
 import sys
