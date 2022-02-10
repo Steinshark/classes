@@ -173,7 +173,7 @@ def send_chat(msg,host,port):
     printc(f"\tSending block to {host}",TAN)
     try:
         post = http_post(host,5002,payload=push_data)
-        if post == "200":
+        if post.status_code == 200:
             printc(f"\tBlock sent successfully",GREEN)
         else:
             printc(f"\tCode recieved: {post} of type {type(post)}",TAN)
