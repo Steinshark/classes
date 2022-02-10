@@ -75,7 +75,7 @@ class Node:
 
     def update_peers(self):
         for peer in self.peers:
-            self.update_peer_node_iterative(self,peer,self.peer_nodes[self.top_peer]['fetcher'].blockchain_download)
+            self.update_peer_node_iterative(peer,self.peer_nodes[self.top_peer]['fetcher'].blockchain_download)
 
     def update_peer_node_iterative(self,host,full_blockchain):
         stack = []
