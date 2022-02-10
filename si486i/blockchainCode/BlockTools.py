@@ -96,8 +96,11 @@ def iter_local_chain(hash):
     length = 0
     while not hash == '':
         length += 1
-        hash = loads(open(f"{hash}.json"))['prev_hash']
-    return len
+        try:
+            hash = loads(open(f"{hash}.json"))['prev_hash']
+        except FileNotFoundError:
+            return length
+    return length
 #########################################################################################
 ########################## FUNCTIONS FOR PROCESSING BLOCKCHAIN ##########################
 #########################################################################################
