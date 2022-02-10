@@ -116,6 +116,7 @@ class DynamicServer:
             if self.empty:
                 printc(f"The genesis block was just called :)",GREEN)
                 self.write_current()
+                print("sending ")
                 return "", 200
             # Open, lock, read the head file, and send the info back
             with open('cache/current.json') as file :
@@ -257,9 +258,7 @@ class DynamicServer:
         printc(f"\t\tFound {len(possible_hashes)} chains",TAN)
         printc(f"\t\tLongest chain: {longest} block",TAN)
 
-        print(len(possible_hashes))
         self.empty = not possible_hashes
-        input(self.empty)
         if not self.empty:
             self.longest_chain = longest
             self.head_hash = l_hash

@@ -161,7 +161,7 @@ def send_chat(msg,host,port):
 
     # Grab the current head hash
     head_hash = get(URL['head']).content.decode()
-
+    print(f"received {head_hash}")
     # Create the block
     json_encoded_block = build_block(head_hash,{'chat' : msg},0)
 
