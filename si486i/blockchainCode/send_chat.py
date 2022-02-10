@@ -15,71 +15,79 @@ except ModuleNotFoundError:
     from Toolchain.terminal import *
 
 
-def send_chat(msg,host,port):
-    #Specify all the URLs
-    URL = { 'head' : f"http://{host}:{port}/head",
-            'push' : f"http://{host}:{port}/push"}
+class Node:
 
-    # Grab the current head hash
-    head_hash = get(URL['head']).content.decode()
+    def __init__(self):
+        self.hosts = apply(strip,open("hosts.txt",'r').readlines())
+        print(self.hosts)
+        input()
 
-    # Create the block
-    json_encoded_block = build_block(head_hash,{'chat' : msg},0)
+    def send_chat(msg,host,port):
+        #Specify all the URLs
+        URL = { 'head' : f"http://{host}:{port}/head",
+                'push' : f"http://{host}:{port}/push"}
 
-    # Build format to send over HTTP
-    push_data = {'block' : json_encoded_block}
+        # Grab the current head hash
+        head_hash = get(URL['head']).content.decode()
 
-    # Send it
-    printc(f"\tSending block to {host}",TAN)
-    try:
-        data, post = http_post(URL['push'],push_data)
-        if post == 200:
-            printc(f"\tBlock sent successfully",GREEN)
-        else:
-            printc(f"\tCode recieved: {post}, data recieved: {data}",TAN)
-    except TypeError:
-        printc(f"\tRecieved Null response...",TAN)
+        # Create the block
+        json_encoded_block = build_block(head_hash,{'chat' : msg},0)
 
-def send_block(msg):
-    hosts = {}
-    chain   = {}
-    longest_chain_len = 0
-    head_hash = {}
-    # Compile a list of all the head_hashes
-    printc(f"Scanning hosts for chain lengths",BLUE)
-    for host in open('hosts.txt').readlines():
-        printc(f"\tTrying to connect to host: {host}", TAN)
+        # Build format to send over HTTP
+        push_data = {'block' : json_encoded_block}
+
+        # Send it
+        printc(f"\tSending block to {host}",TAN)
         try:
-            host = host.strip()
-            head_hash[host] = get(f"http://{host}:5002/head", timeout=3).content.decode()
-        except BlockChainVerifyError:
-            printc(f"\tError in get request on host {host}",RED)
-            continue
-        except ConnectionError:
-            printc(f"\tError in get request on host {host}",RED)
-        except ConnectionRefusedError:
-            printc(f"\tError in get request on host {host}",RED)
+            data, post = http_post(URL['push'],push_data)
+            if post == 200:
+                printc(f"\tBlock sent successfully",GREEN)
+            else:
+                printc(f"\tCode recieved: {post}, data recieved: {data}",TAN)
+        except TypeError:
+            printc(f"\tRecieved Null response...",TAN)
+
+    def check_peer_servers(msg):
+        hosts = {}
+        chain   = {}
+        longest_chain_len = 0
+        head_hash = {}
+        # Compile a list of all the head_hashes
+        printc(f"Scanning hosts for chain lengths",BLUE)
+        for host in open('hosts.txt').readlines():
+            printc(f"\tTrying to connect to host: {host}", TAN)
+            try:
+                host = host.strip()
+                head_hash[host] = get(f"http://{host}:5002/head", timeout=3).content.decode()
+            except BlockChainVerifyError:
+                printc(f"\tError in get request on host {host}",RED)
+                continue
+            except ConnectionError:
+                printc(f"\tError in get request on host {host}",RED)
+            except ConnectionRefusedError:
+                printc(f"\tError in get request on host {host}",RED)
 
 
-        try:
-            chatter = ChatService(host=host,port=5002)
-            chatter.fetch_blockchain()
-            hosts[host] = chatter
-            blockchain_len = chatter.info['length']
-            printc(f"\tConnection to {host} succeeded! Chain of length {blockchain_len} found\n\n",GREEN)
-            if chatter.info['length'] >= longest_chain_len:
-                longest_chain_len = chatter.info['length']
+            try:
+                chatter = ChatService(host=host,port=5002)
+                chatter.fetch_blockchain()
+                hosts[host] = chatter
+                blockchain_len = chatter.info['length']
+                printc(f"\tConnection to {host} succeeded! Chain of length {blockchain_len} found\n\n",GREEN)
+                if chatter.info['length'] >= longest_chain_len:
+                    longest_chain_len = chatter.info['length']
 
-        except BlockChainRetrievalError as b:
-            printc(f"\t{b}",TAN)
-            printc(f"\tError in fetch blockchain on host {host}", RED)
+            except BlockChainRetrievalError as b:
+                printc(f"\t{b}",TAN)
+                printc(f"\tError in fetch blockchain on host {host}", RED)
 
-    printc(f"longest chain is len: {longest_chain_len}",BLUE)
-    printc(f"Sending out blocks",BLUE)
+        printc(f"longest chain is len: {longest_chain_len}",BLUE)
+        printc(f"Sending out blocks",BLUE)
 
-    for host in hosts:
-        if hosts[host].info['length'] >= longest_chain_len:
-            send_chat(msg,host,5002)
+        for host in hosts:
+            if hosts[host].info['length'] >= longest_chain_len:
+
+                send_chat(msg,host,5002)
 
 
 if __name__ == "__main__":
