@@ -223,7 +223,6 @@ class DynamicServer:
 
         # Set inits
         possible_hashes = grab_cached_hashes()
-        print(possible_hashes.index(""))
         hashes_to_prev_hash = {}
         hash_len = {}
 
