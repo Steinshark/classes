@@ -132,7 +132,7 @@ def check_fields(block,allowed_versions=[0],allowed_hashes=[''],trust=False):
     elif (not 'prev_hash' in block) or\
          (not block['prev_hash'] in allowed_hashes):
         print(block['prev_hash'] in allowed_hashes)
-        print(f"type hash {type(block['prev_hash'])} type allowed {allowed_hashes[0]}")
+        print(f"type hash {type(block['prev_hash'])} type allowed {type(allowed_hashes[3])}")
         input()
         print(allowed_hashes)
         input()
