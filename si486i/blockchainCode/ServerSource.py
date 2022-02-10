@@ -89,7 +89,7 @@ class DynamicServer:
 
     def __init__(self):
         printc(f"STARTING SERVER INIT",BLUE)
-        printc(f"\tInit vars")
+        printc(f"\tInit vars",TAN)
         self.app = flask.Flask(__name__)
         self.empty = True
         self.head_hash = None                   # Keep track of whats in current
@@ -227,7 +227,7 @@ class DynamicServer:
                 possible_hashes.append(hash)
                 with open(f"cache/{file}",'r') as f:
                     prev_hash = loads(f.read().strip())['prev_hash']
-                    printc(f"hash {hash} maps to {prev_hash}",TAN)
+                    printc(f"\t\thash {hash} maps to {prev_hash}",TAN)
 
 
         for not_possible_end_hash in hashes_to_prev_hash.values():
