@@ -88,6 +88,8 @@ class DynamicServer:
 ################################################################################
 
     def __init__(self):
+        printc(f"STARTING SERVER INIT",BLUE)
+        printc(f"\tInit vars")
         self.app = flask.Flask(__name__)
         self.empty = True
         self.head_hash = None                   # Keep track of whats in current
@@ -163,30 +165,30 @@ class DynamicServer:
         @self.app.route('/push', methods=['POST'])
         def push_block():
             received_data = flask.request.form
-            print(f"{Color.TAN}\trecieved '{str(received_data)[:35]} ... {str(received_data)[-20:]}'{Color.END}")
+            printc(f"\trecieved '{str(received_data)[:35]} ... {str(received_data)[-20:]}'",TAN)
 
 ################################################################################
 #                    Check if the message is decodable at all
 
             try:
                 block = JSON_to_block(received_data['block'])
-                print(f"{Color.TAN}\tdecoded to '{str(block)[:35]} ... {str(block)[-20:]}'{Color.END}")
+                printc(f"\tdecoded to '{str(block)[:35]} ... {str(block)[-20:]}'",TAN)
 
             except JSONDecodeError as j:
-                print(f"{Color.RED}\terror decoding sent block{Color.END}")
+                printc(f"\terror decoding sent block",RED)
 
 ################################################################################
 #                    Check if the block fields are OK
 
             if not check_fields(block,allowed_versions = [0],allowed_hashes=['']+grab_cached_hashes(cache_location='cache')):
-                print(f"{Color.RED}\trejected block{Color.END}")
-                print('\n\n\n')
+                printc(f"\trejected block",RED)
+                printc('\n\n\n',TAN)
                 return f"{Color.RED}\tblock rejected!{Color.END}", 400
 
             else:
                 update_chains(block)
                 open(f'{hash(block.encode())}')
-                print(f"{Color.GREEN}\taccepted block{Color.END}")
+                printc(f"\taccepted block",GREEN)
                 print('\n\n\n')
                 return f"{Color.GREEN}\tblock accepted!{Color.END}", 200
 
@@ -209,13 +211,14 @@ class DynamicServer:
 ################################################################################
 ################################################################################
     def scan_chains(self):
-        printc(f"Scanning for all local chains stored on server",BLUE)
+        printc(f"\tScanning for local chains",BLUE)
         possible_hashes = []
         hashes_to_prev_hash = {}
 
         hash_to_info = {}
         if not isdir('cache'):
             mkdir("cache")
+            printc(f"\t\tNo blocks found",RED)
             self.all_chains = {}
             return
         for file in listdir('cache/'):
@@ -237,6 +240,9 @@ class DynamicServer:
             if bl > longest:
                 longest = bl
                 l_hash = hash
+        printc(f"\t\tFound {len(possible_hashes} chains",TAN)
+        printc(f"\t\tLongest chain: {longest} block",TAN)
+
         self.empty = not possible_hashes
         self.longest_chain = longest
         self.longest_hash = l_hash
