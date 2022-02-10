@@ -217,7 +217,10 @@ class DynamicServer:
     def scan_chains(self):
         printc(f"\tScanning for local chains",BLUE)
 
-
+        # Set inits
+        possible_hashes = grab_cached_hashes()
+        hashes_to_prev_hash = {}
+        hash_len = {}
 
         # Make sure cache exists
         if not isdir('cache'):
@@ -226,16 +229,17 @@ class DynamicServer:
             self.all_chains = {}
             return
 
+        # Get all hashes in file
+        for hash in grab_cached_hashes():
+                hash = file[:-5].strip()
+                with open(f"cache/{file}",'r') as f:
+                    prev_hash = loads(f.read().strip())['prev_hash']
+                    hashes_to_prev_hash[hash] = prev_hash
+                    printc(f"\t\thash {hash[:20]}... maps to {prev_hash[:20]}..",TAN)
 
-        # Set some dicts
-        possible_hashes = grab_cached_hashes()
-        input(possible_hashes)
-        hash_len = {}
-        # This one's great, no?
-        possible_hashes = {hash : loads(open(f"cache/{hash}.json",'r').read().strip())['prev_hash'] for hash in possible_hashes if not loads(open(f"cache/{hash}.json",'r').read().strip())['prev_hash'] in possible_hashes }
 
-
-        # Find the longest
+        for not_possible_end_hash in hashes_to_prev_hash.values():
+            possible_hashes.pop(not_possible_end_hash)
         longest = 0
         l_hash = None
         for hash in possible_hashes:
@@ -288,6 +292,7 @@ class DynamicServer:
             file.write(dumps(info))
             flock(file,LOCK_UN)
 
+    def roll_thourgh
 if __name__ == '__main__':
     host = input('run on host: ').strip()
     port = input('run on port: ')
