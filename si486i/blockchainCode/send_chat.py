@@ -49,7 +49,7 @@ class Node:
         except TypeError:
             printc(f"\tRecieved Null response...",TAN)
 
-    def check_peer_servers(self,msg):
+    def check_peer_servers(self):
 
         # Checkk the state of all peer nodes
         printc(f"Checking Peer Nodes",BLUE)
