@@ -195,11 +195,11 @@ class DynamicServer:
                 return f"{Color.RED}\tblock rejected!{Color.END}", 400
 
             else:
-                self.update_chains(block)
                 block_write_format = dumps(block)
                 with open(f'{hash(block_write_format.encode())}','w') as file:
                     file.write(block_write_format)
                 printc(f"\taccepted block",GREEN)
+                self.update_chains(block)
                 print('\n\n\n')
                 return f"{Color.GREEN}\tblock accepted!{Color.END}", 200
 
