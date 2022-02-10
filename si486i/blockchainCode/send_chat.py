@@ -22,7 +22,7 @@ class Node:
         print(self.hosts)
         input()
 
-    def send_chat(msg,host,port):
+    def send_chat(self,msg,host,port):
         #Specify all the URLs
         URL = { 'head' : f"http://{host}:{port}/head",
                 'push' : f"http://{host}:{port}/push"}
@@ -47,7 +47,7 @@ class Node:
         except TypeError:
             printc(f"\tRecieved Null response...",TAN)
 
-    def check_peer_servers(msg):
+    def check_peer_servers(self,msg):
         hosts = {}
         chain   = {}
         longest_chain_len = 0
@@ -91,4 +91,4 @@ class Node:
 
 
 if __name__ == "__main__":
-    send_block(input("New message for block: "))
+    n = Node()
