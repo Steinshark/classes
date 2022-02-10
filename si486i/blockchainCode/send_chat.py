@@ -18,7 +18,7 @@ except ModuleNotFoundError:
 class Node:
 
     def __init__(self):
-        self.hosts = apply(strip,open("hosts.txt",'r').readlines())
+        self.hosts = map(strip,open("hosts.txt",'r').readlines())
         print(self.hosts)
         input()
 
