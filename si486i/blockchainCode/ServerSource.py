@@ -231,7 +231,6 @@ class DynamicServer:
 
         # Get all hashes in file
         for hash in grab_cached_hashes():
-                hash = file[:-5].strip()
                 with open(f"cache/{file}",'r') as f:
                     prev_hash = loads(f.read().strip())['prev_hash']
                     hashes_to_prev_hash[hash] = prev_hash
