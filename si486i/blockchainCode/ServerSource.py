@@ -238,7 +238,7 @@ class DynamicServer:
 
 
         for not_possible_end_hash in hashes_to_prev_hash.values():
-            possible_hashes.pop(not_possible_end_hash)
+            possible_hashes.remove(not_possible_end_hash)
         longest = 0
         l_hash = None
         for hash in possible_hashes:
