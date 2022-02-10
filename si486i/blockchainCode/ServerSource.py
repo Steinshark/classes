@@ -246,8 +246,8 @@ class DynamicServer:
         l_hash = None
         for hash in possible_hashes:
             hash_len[hash] = iter_local_chain(hash)
-            if bl > longest:
-                longest = bl
+            if hash_len[hash] > longest:
+                longest = hash_len[hash]
                 l_hash = hash
         printc(f"\t\tFound {len(possible_hashes)} chains",TAN)
         printc(f"\t\tLongest chain: {longest} block",TAN)
