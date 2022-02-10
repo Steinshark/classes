@@ -92,7 +92,7 @@ class DynamicServer:
         printc(f"\tInit vars",TAN)
         self.app = flask.Flask(__name__)
         self.empty = True
-        self.head_hash = None                   # Keep track of whats in current
+        self.head_hash = ''                     # Keep track of whats in current
         self.longest_chain = 0                  # This will be used as a dynamic
                                                 #                 'current.json'
         self.scan_chains()                      # Builds the initial chains list
@@ -114,12 +114,8 @@ class DynamicServer:
 
             # Check that we have a chain
             if self.empty:
-                printc(f"The genesis block was just made!! :)",GREEN)
-                with open('cache/current.json','w') as file:
-                    flock(file,LOCK_SH)
-                    info = {'length' : 0, 'head' : ''}
-                    file.write(dumps(info))
-                    flock(file,LOCK_UN)
+                printc(f"The genesis block was just called :)",GREEN)
+                self.write_current()
                 return "", 200
             # Open, lock, read the head file, and send the info back
             with open('cache/current.json') as file :
@@ -194,7 +190,7 @@ class DynamicServer:
                 return f"{Color.RED}\tblock rejected!{Color.END}", 400
 
             else:
-                update_chains(block)
+                self.update_chains(block)
                 open(f'{hash(block.encode())}')
                 printc(f"\taccepted block",GREEN)
                 print('\n\n\n')
@@ -243,8 +239,8 @@ class DynamicServer:
         longest = 0
         l_hash = None
         for hash in possible_hashes:
-            bl = len(get_blockchain_from_hash(hash,False))
-            hash_to_info[hash] = bl
+            length = len(get_blockchain_from_hash(hash,False))
+            hash_to_info[hash] = length
             if bl > longest:
                 longest = bl
                 l_hash = hash
@@ -256,9 +252,42 @@ class DynamicServer:
         self.longest_hash = l_hash
         self.all_chains = hash_to_info
 
-    def update_chains(block):
-        pass
+    def update_chains(self,block):
+        block_hash = hash(block.encode())
 
+        # This case we are adding to an existing chain
+        if block['prev_hash'] in self.all_chains:
+
+            # Get old chain length
+            prev_len = self.all_chains[block['prev_hash']]
+
+            # Update the chain to have new head
+            del(self.all_chains[block['prev_hash']])
+            self.all_chains[block_hash] = prev_len + 1
+
+            # If this makes a new longest chain, update file
+            if self.all_chains[block_hash] > self.longest_chain:
+                self.longest_hash = block_hash
+                self.longest_chain += 1
+                self.write_current()
+
+        # This case we are creating a chain
+        else:
+            # Make new chain
+            self.all_chains[block_hash] = 1
+
+            # Check if its the longest (Aka first block)
+            if self.all_chains[block_hash] > self.longest_chain:
+                self.longest_hash = block_hash
+                self.longest_chain += 1
+                self.write_current()
+
+    def write_current(self):
+        with open('cache/current.json') as file:
+            flock(file,LOCK_SH)
+            info = {'length' : self.longest_chain, 'head' : self.longest_hash}
+            file.write(dumps(info))
+            flock(file,LOCK_UN)
 if __name__ == '__main__':
     host = input('run on host: ').strip()
     port = input('run on port: ')
