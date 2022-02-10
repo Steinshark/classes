@@ -103,5 +103,7 @@ class Node:
 
 
 if __name__ == "__main__":
-    n = Node()
-    n.update_peers()
+    msg = input("msg: ")
+    host = input("host: ")
+    port = 5002
+    send_chat(msg,host,port)
