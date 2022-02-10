@@ -114,6 +114,7 @@ class DynamicServer:
 
             # Check that we have a chain
             if self.empty:
+                printc(f"The genesis block was just made!! :)",GREEN)
                 with open('cache/current.json','w') as file:
                     flock(file,LOCK_SH)
                     info = {'length' : 0, 'head' : ''}
