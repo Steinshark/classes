@@ -3,6 +3,15 @@ from json import dumps
 from show_chat import ChatService
 from requests import get
 
+# Package import to work on windows and linux
+try:
+    sys.path.append("C:\classes")
+    sys.path.append("D:\classes")
+    from Toolchain.terminal import *
+except ModuleNotFoundError:
+    sys.path.append("/home/m226252/classes")
+    from Toolchain.terminal import *
+
 
 def send_chat(msg,host,port):
     #Specify all the URLs
@@ -51,4 +60,4 @@ def send_block(msg):
 
 
 if __name__ == "__main__":
-    send_block("hi everyone!")
+    send_block(input("New message for block: "))
