@@ -12,7 +12,7 @@ try:
     sys.path.append("C:\classes")
     import Toolchain
 except ModuleNotFoundError:
-    sys.path.append("~/classes/")
+    sys.path.append("/home/m226252/classes")
     print(sys.path)
     import Toolchain
 
