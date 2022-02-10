@@ -231,7 +231,7 @@ class DynamicServer:
 
         # Get all hashes in file
         for hash in grab_cached_hashes():
-                with open(f"cache/{file}",'r') as f:
+                with open(f"cache/{hash}.json",'r') as f:
                     prev_hash = loads(f.read().strip())['prev_hash']
                     hashes_to_prev_hash[hash] = prev_hash
                     printc(f"\t\thash {hash[:20]}... maps to {prev_hash[:20]}..",TAN)
