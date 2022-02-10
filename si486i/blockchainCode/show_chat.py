@@ -11,7 +11,6 @@ CHECKPOINT_FILE = 'cache/current.json'
 
 class FetchService:
     def __init__(self,host=None,port=-1):
-        self.format_parser()
         if (not host == None) and (not port == -1):
             self.host = host
             self.port = port
