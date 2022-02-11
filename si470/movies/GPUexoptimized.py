@@ -142,6 +142,9 @@ class ExecuteJob:
         if self.belongs_in_list(distance):
             self.place_in_list(distance)
         self.currentId =  (1 + self.currentId) % self.n_movies
+        if self.currentId % 10000 == 0:
+            printc(f"took {(time()-self.t1):.3f} to calc 10000",GREEN)
+            self.t1 = time()
         if self.currentId == 0:
             input("made it through a row!",GREEN)
         return distance
@@ -177,6 +180,7 @@ class ExecuteJob:
             self.current_movie = slice_row_sparse(self.matrix,id)
             self.currentId = 0
             # update the current movie recommendations
+            self.t1=time()
             distances = tf.map_fn(  self.helper_func,
                                     self.matrix,
                                     dtype=tf.dtypes.float64)

@@ -10,15 +10,15 @@ def euclidean_distance(A,B):
     #ALGORITHM
 
     # 1 - Calc pointwise difference
-    subMatrix = A - B
+    subMatrix = tf.math.subtract(A,B)
     # 2 - Find square of distance
-    squareMatrix = tf.square(subMatrix)
+    squareMatrix = tf.math.square(subMatrix)
 
     # 3 = Find the sum of the square distance
-    sumMatrix = tf.reduce_sum(squareMatrix)
+    sumMatrix = tf.math.reduce_sum(squareMatrix)
 
     # 4 - return the squareroot of the sumMatrix
-    return tf.sqrt(sumMatrix)
+    return tf.math.sqrt(sumMatrix)
 
 
 def slice_col_sparse(matrix,index):
