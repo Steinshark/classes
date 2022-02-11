@@ -16,6 +16,7 @@ times = {'start' : time()}
 # Package import to work on windows and linux
 sys.path.append("C:\classes")
 sys.path.append("D:\classes")
+sys.path.append("/home/mids/m226252/classes/")
 
 from Toolchain.terminal import *
 
@@ -58,19 +59,19 @@ class ExecuteJob:
             for dset in self.datasets[size]:
                 if not (size == 'large' and dset == 'ratings') and not (size == 'usna' and dset == 'foodMovies'):
                     # Read and print status
-                    printc(f"\n\treading {dset}-{size}",TAN,endl='')
+                    printc(f"\treading {dset}-{size}",TAN,endl='')
                     self.dataframes[size][dset]   = pd.read_csv(self.datasets[size][dset],sep=',')
-                    printc(f"\n\tsize: {(self.dataframes[size][dset].memory_usage().sum() / (1024.0*1024.0)):.2f} MB",TAN,endl='')
+                    printc(f"\n\tsize: {(self.dataframes[size][dset].memory_usage().sum() / (1024.0*1024.0)):.2f} MB\n",TAN,endl='')
 
         # Read larger 'ratings' dataset
-        printc(f"\n\treading ratings-large",TAN)
+        printc(f"\treading ratings-large",TAN)
         self.ratings        = pd.read_csv(  self.datasets['large']['ratings'],
                                             dtype   =   {   'userId'    :   np.float32,
                                                             'movieId'   :   np.float32,
                                                             'rating'    :   np.float64,
                                                             'timestamp' :   np.float64},
                                             sep     =   ',')
-        printc(f"\tsize: {(self.ratings.memory_usage().sum() / (1024.0*1024.0)):.2f} MB\n\n",TAN)
+        printc(f"\tsize: {(self.ratings.memory_usage().sum() / (1024.0*1024.0)):.2f} MB",TAN)
 
         # Gather the USNA data and prepare it
         self.usna           = pd.read_csv(  self.datasets['usna']['foodMovies'],     sep = ',')[self.headers]
@@ -88,30 +89,30 @@ class ExecuteJob:
         self.n_users                             = int(         self.ratings                           ['userId'].iloc     [-1]        )
 
         # Done with data read!
-        printc(f"\tRead Data in {(time()-t1):.3f} seconds",GREEN)
+        printc(f"Read Data in {(time()-t1):.3f} seconds",GREEN)
 
     def show_data(self):
         printc(f"\n\nDATASET: ",BLUE)
 
-        printc(f"{BLUE}'ratings' looks like:  {END}\n"   +   \
+        printc(f"{TAN}'ratings' looks like:  {END}\n"   +   \
                     f"{self.ratings.head(3)}                               \n\n",TAN)
 
-        printc(f"{BLUE}'movies' looks like:   {END}\n"   +   \
+        printc(f"{TAN}'movies' looks like:   {END}\n"   +   \
                     f"{self.dataframes['large']['movies'].head(3)}    \n\n",TAN)
 
-        printc(f"{BLUE}number of users:       {END}  "   +   \
+        printc(f"{TAN}number of users:       {END}  "   +   \
                     f"{self.n_users}                                  ",TAN)
 
-        printc(f"{BLUE}number of movies:      {END}  "   +   \
+        printc(f"{TAN}number of movies:      {END}  "   +   \
                     f"{self.n_movies}                                 \n\n",TAN)
 
-    def run_svd(self,n):
+    def run_svd(self,n,alg):
         t1 = time()
 
-        tsvd = TruncatedSVD(n_components=n)
+        tsvd = TruncatedSVD(n_components=n, algorithm=alg,n_iter=3)
         m_reduced = tsvd.fit_transform(self.matrix)
         t2 = time()-t1
-        printc(f"Took {(t2):.3f} seconds to calculate",GREEN)
+        printc(f"{n} took {(t2):.3f}s to calculate with {RED}{alg}",GREEN)
         printc(f"\tvar: {tsvd.explained_variance_ratio_.sum(): .4f} in {n} dimensions ",TAN)
 
         np.save(f"SVD_DECOMP{n}",m_reduced)
@@ -138,18 +139,34 @@ class ExecuteJob:
         # Init our tensors for building the matrix later
         self.create_matrix()
 
-        times = []
-        varia = []
-        n_it = [1500]
+        times = {"arpack" : [], "rand" : []}
+        varia = {"arpack" : [], "rand" : []}
         try:
-            for n in n_it:
-                v, t = self.run_svd(n)
-                times.append(t)
-                varia.append(v/60)
+            n_it = list(map(lambda x : int(x),sys.argv[1:]))
         except:
-            pass
-        plt.plot(n_it,varia,"r-")
-        plt.plot(n_it,times,"b--")
+            n_it = [1500]
+
+        for n in n_it:
+            printc(f"Running n={n}",BLUE)
+
+            v, t = self.run_svd(n,'arpack')
+            times['arpack'].append(t/60)
+            varia['arpack'].append(v)
+
+            v, t = self.run_svd(n,'randomized')
+            times['rand'].append(t/60)
+            varia['rand'].append(v)
+
+        plt.plot(n_it,varia['arpack'],"ro",label="variance_ar")
+        plt.plot(n_it,times['arpack'],"r--",label="calc time_ar")
+
+        plt.plot(n_it,varia['rand'],"go",label="variance_r")
+        plt.plot(n_it,times['rand'],"g--",label="calc time_r")
+
+        plt.xlabel("n value")
+        plt.ylabel("time (min) / variance")
+        plt.legend()
+
         plt.show()
 if __name__ == "__main__":
     movies = [122906,96588,179819,175303,168326,177615,6539,79091,161644,115149,60397,192283,177593,8961]
