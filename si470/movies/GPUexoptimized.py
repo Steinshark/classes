@@ -16,7 +16,7 @@ sys.path.append("/mnt/d/classes")
 sys.stderr = sys.stdout
 print(sys.path)
 from Toolchain.terminal import *
-from Toolchain.gpuTools import *
+from Toolchain.gputools import *
 
 
 
