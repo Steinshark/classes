@@ -9,11 +9,11 @@ import pprint
 
 times = {'start' : time()}
 # Package import to work on windows and linux
+sys.path.append("C:\classes")
+sys.path.append("D:\classes")
+from Toolchain.terminal import *
+from Toolchain.GPUTools import euclidean_distance, slice_col_sparse
 try:
-    sys.path.append("D:\classes")
-    sys.path.append("C:\classes")
-    from Toolchain.terminal import *
-    from Toolchain.GPUTools import euclidean_distance, slice_col_sparse
 except ModuleNotFoundError:
     sys.path.append("/home/m226252/classes")
     from Toolchain.terminal import *
