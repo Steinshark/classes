@@ -21,7 +21,6 @@ class ExecuteJob:
     def __init__(self, liked_movies,model_replacement='mean'):
         # Give us some nice things to know and set some settings
         printc(f"Num GPUs Available: {len(tf.config.list_physical_devices('GPU'))}\n\n",GREEN)
-        tf.debugging.set_log_device_placement(True)
         self.replace = model_replacement
         # This will be used to find predictions
         self.liked_movies = [122906,96588,179819,175303,168326,177615,6539,79091,161644,115149,60397,192283,177593,8961]
@@ -80,7 +79,7 @@ class ExecuteJob:
             self.usna[col].fillna(value = 0, inplace = True)
 
         # Some helpful constants                                  dataset                             column                index
-        self.n_movies                            = int(         self.dataframes['large']['movies']     ['movieId'].iloc    [-1]        ))
+        self.n_movies                            = int(         self.dataframes['large']['movies']     ['movieId'].iloc    [-1]        )
         self.n_users                             = int(         self.ratings                           ['userId'].iloc     [-1]        )
 
         # Done with data read!
@@ -90,16 +89,16 @@ class ExecuteJob:
     def show_data(self):
         printc(f"\n\nDATASET: ",BLUE)
 
-        printc(f"\t {BLUE}'ratings' looks like:  {END}\n"   +   \
+        printc(f"{BLUE}'ratings' looks like:  {END}\n"   +   \
                     f"{self.ratings.head(3)}                               \n\n",TAN)
 
-        printc(f"\t {BLUE}'movies' looks like:   {END}\n"   +   \
+        printc(f"{BLUE}'movies' looks like:   {END}\n"   +   \
                     f"{self.dataframes['large']['movies'].head(3)}    \n\n",TAN)
 
-        printc(f"\t {BLUE}number of users:       {END}  "   +   \
+        printc(f"{BLUE}number of users:       {END}  "   +   \
                     f"{self.n_users}                                  ",TAN)
 
-        printc(f"\t {BLUE}number of movies:      {END}  "   +   \
+        printc(f"{BLUE}number of movies:      {END}  "   +   \
                     f"{self.n_movies}                                 \n\n",TAN)
 
 
@@ -108,21 +107,20 @@ class ExecuteJob:
         t1 = time()
 
         # Set x,y index arrays and build index tensor (n_movies,x)
-        matrix_x        = tf.convert_to_tensor(self.ratings['userId'],  dtype=self.i_64)
-        matrix_y        = tf.convert_to_tensor(self.ratings['movieId'], dtype=self.i_64)
+        matrix_x        = tf.convert_to_tensor(self.ratings['userId'].apply(lambda x : x - 1),  dtype=self.i_64)
+        matrix_y        = tf.convert_to_tensor(self.ratings['movieId'].apply(lambda x : x - 1), dtype=self.i_64)
         self.indices    = tf.stack( [matrix_y,matrix_x],    axis = 1)
-
         # Build value tensor
         self.values     = tf.convert_to_tensor(self.ratings['rating'],  dtype=self.f_64)
-
+        self.values    =  tf.transpose(self.values)
         # Info
         printc(f"\tFinished Tensor build in\t{(time()-t1):.3f} seconds",GREEN)
         printc(f"\tindices:\t{self.indices.shape}\n\tvalues  : {self.values.shape}",GREEN)
 
 
     def create_sparse_matrix(self):
-        matrix      = tf.sparse.SparseTensor(indices=self.indices,values=self.values,dense_shape=[self.n_movies,self.n_users])
-        self.matrix = tf.sparse.reorder(matrix)
+        self.matrix      = tf.sparse.reorder(tf.sparse.SparseTensor(indices=self.indices,values=self.values,dense_shape = [self.n_movies,self.n_users]))
+        printc(f"SHAPE OF MATR: {self.matrix.shape}",GREEN)
         #self.matrix = tf.sparse.transpose(matrix)
 
 
@@ -131,19 +129,21 @@ class ExecuteJob:
 
 
     def place_in_list(self,dist):
-        closest_movies[self.checkId]['distance'] = dist
-        closest_movies[self.checkId]['movie']    = self.currentId
+        self.closest_movies[self.checkId]['distance'] = dist
+        self.closest_movies[self.checkId]['movie']    = self.currentId
 
 
-    def helper_func(row_slice):
+    def helper_func(self,row_slice):
+        row_slice = tf.sparse.reorder(row_slice)
         # Convert to dense matrix and find distance to movie we are predicting for
         dense_row = tf.sparse.to_dense(row_slice)
         distance = euclidean_distance(dense_row, self.current_movie)
-
         # Update the current movies list
-        if self.belongs_in_list():
-            printc(f"updated movie {self.checkId} to {self.currentId} dist {distance}",TAN)
+        if self.belongs_in_list(distance):
             self.place_in_list(distance)
+        self.currentId =  (1 + self.currentId) % self.n_movies
+        if self.currentId == 0:
+            input("made it through a row!",GREEN)
         return distance
 
 
@@ -174,9 +174,8 @@ class ExecuteJob:
 
             # The movie we know we like
             self.checkId = id
-            input(slice_row_sparse(self.matrix,1))
             self.current_movie = slice_row_sparse(self.matrix,id)
-
+            self.currentId = 0
             # update the current movie recommendations
             distances = tf.map_fn(  self.helper_func,
                                     self.matrix,

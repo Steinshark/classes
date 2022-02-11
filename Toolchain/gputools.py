@@ -7,11 +7,6 @@ from .terminal import *
 # Computes the euclidean distance of tensors A and B
 def euclidean_distance(A,B):
 
-    # Error Check
-    if not A.shape == B.shape:
-        printc(f"\tshape mismatch A: {A.shape}, B: {B.shape}",RED)
-        return
-
     #ALGORITHM
 
     # 1 - Calc pointwise difference
@@ -32,5 +27,5 @@ def slice_col_sparse(matrix,index):
 
 
 def slice_row_sparse(matrix,index):
-    row_matrix_sparse       =   tf.sparse.slice(    matrix,     [index,0],     [1,matrix.shape[1]])
+    row_matrix_sparse       =  tf.sparse.reorder( tf.sparse.slice(    matrix,     [index,0],     [1,matrix.shape[1]]))
     return                      tf.sparse.to_dense(row_matrix_sparse)
