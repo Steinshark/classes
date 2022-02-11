@@ -7,6 +7,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import sys
 from time import time
 import pprint
+from sklearn.decomposition import TruncatedSVD
 
 times = {'start' : time()}
 # Package import to work on windows and linux
@@ -121,13 +122,32 @@ class ExecuteJob:
         printc(f"\tFinished Tensor build in\t{(time()-t1):.3f} seconds",GREEN)
         printc(f"\tindices:\t{self.indices.shape}\n\tvalues  : {self.values.shape}",GREEN)
 
-    def load_sparse_matrix(self):
-        self.matrix      = tf.sparse.reorder(tf.sparse.SparseTensor(indices=self.indices,values=self.values,dense_shape = [self.n_movies,self.n_users]))
+    def create_sparse_matrix(self):
+        # Create indexing matrices
+        matrix_x        = tf.convert_to_tensor(self.ratings['userId'].apply(lambda x : x - 1),  dtype=self.i_64)
+        matrix_y        = tf.convert_to_tensor(self.ratings['movieId'].apply(lambda x : x - 1), dtype=self.i_64)
+        self.indices    = tf.stack( [matrix_y,matrix_x],    axis = 1)
+        # Build value tensor
+        self.values     = tf.convert_to_tensor(self.ratings['rating'],  dtype=self.f_64)
+        self.values    =  tf.transpose(self.values)
 
-        s,u,v = tf.linalg.svd(self.matrix)
-        input(u)
-        printc(f"SHAPE OF MATR: {self.matrix.shape}",GREEN)
-        #self.matrix = tf.sparse.transpose(matrix)
+
+        # Create matrix
+        self.matrix      = tf.sparse.reorder(tf.sparse.SparseTensor(indices=self.indices,values=self.values,dense_shape = [self.n_movies,self.n_users]))
+        printc(f"{type(self.matrix)} SHAPE OF: {self.matrix.shape}",GREEN)
+
+    def create_reduced_dense_matrix(n,alg='randomized',iters=5):
+
+        # Build sparse matrix
+        rows = self.ratings['movieId'] - 1
+        cols =  self.ratings['userId'] - 1
+        matrix_sparse = scipy.sparse.coo_matrix((self.ratings['rating'],(rows,cols)),shape=[self.n_movies,self.n_users])
+
+        # Reshape with TSV
+        tsvd = TruncatedSVD(n_components=n, algorithm=alg,n_iter=iters)
+        self.matrix = tsvd.fit_transform(matrix_sparse)
+
+    def load_sparse_matrix(self):
 
     def belongs_in_list(self,dist):
         return (dist < self.closest_movies[self.checkId]['distance']) and not (self.currentId == self.checkId)
@@ -163,8 +183,6 @@ class ExecuteJob:
         # Give the user some useful things to know
         self.show_data()
 
-        # Init our tensors for building the matrix later
-        self.create_init_tensors()
         # Build our full sparse matrix (n_movies,n_users)
         self.create_sparse_matrix()
 
@@ -186,7 +204,7 @@ class ExecuteJob:
                 self.currentId = 0
                 # update the current movie recommendations
                 self.t1=time()
-                distances = tf.map_fn(  self.helper_func,
+                distances = tf.map_fn(  euclidean_distance(),
                                         self.matrix,
                                         dtype=tf.dtypes.float64)
 

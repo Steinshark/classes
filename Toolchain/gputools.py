@@ -16,4 +16,4 @@ def slice_col_sparse(matrix,index):
 
 def slice_row_sparse(matrix,index):
     row_matrix_sparse       =  tf.sparse.reorder( tf.sparse.slice(    matrix,     [index,0],     [1,matrix.shape[1]]))
-    return                      tf.sparse.to_dense(row_matrix_sparse)
+    return                     tf.sparse.to_dense(row_matrix_sparse)
