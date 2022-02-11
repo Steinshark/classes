@@ -140,8 +140,19 @@ matrix = tf.sparse.SparseTensor(indices=index,values=value,dense_shape=[matrix_y
 #                           Define a dictonary to map neighbors
 ###############################################################################
 closest_movies = {
-                movieId     :   {'movie' : 0, 'distance' : 0} for movieId in user_liked
+                movieId     :   {'movie' : 0, 'distance' : 10000} for movieId in user_liked
 }
+
+
+
+def helper_func(dist,current_i):
+    global x
+    x += 1
+
+    if dist < closest_movies[i]['distance'] and not x == current_i:
+        printc(f"updated movie {current_i} to {x} dist {dist}")
+        closest_movies[i]['distance'] = dist
+        closest_movies[i]['movie']    = x
 
 
 
@@ -155,21 +166,8 @@ for id in user_liked:
     # The movie we know we like
     this_movie = slice_col_sparse(matrix,id)
 
-    for movieId in range(n_movies):
-        if movieId in [id] + list(closest_movies.keys()):
-            continue
-        # movie to check
-        column = slice_col_sparse(matrix,movieId)
-
-        # check
-        distance = euclidean_distance(column,this_movie)
-        if movieId % 1000 == 0:
-            printc(f"Currently crunching movie number: {movieId} - (it was dist: {distance})", BLUE)
-        if distance < closest_movies[id]['distance']:
-            closest_movies[id]['movie']    = movieId
-            closest_movies[id]['distance'] = distance
-
-
+    x = 0
+    distances = tf.map_fn(lambda A :  helper_func(tf.reduce_sum(tf.square(A - this_movie)), id), matrix, dtype=tf.dtypes.float64)
 
 with open("output",'w') as file:
     file.write(pprint.pformat(closest_movies))

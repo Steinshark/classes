@@ -16,7 +16,6 @@ def euclidean_distance(A,B):
 
     # 1 - Calc pointwise difference
     subMatrix = A - B
-
     # 2 - Find square of distance
     squareMatrix = tf.square(subMatrix)
 
