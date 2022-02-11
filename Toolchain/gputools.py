@@ -1,8 +1,7 @@
 ################################################################################
 #                           IMPORTS
 ################################################################################
-from tensorflow import square, reduce_sum, sqrt, sparse
-from tensorflow.sparse import to_dense
+import tensorflow as tf
 from .terminal import *
 
 # Computes the euclidean distance of tensors A and B
@@ -28,5 +27,5 @@ def euclidean_distance(A,B):
     return tf.sqrt(sumMatrix)
 
 def slice_col_sparse(matrix,index):
-    return  slice(    matrix,     [0,index],     [matrix.shape[0],1])
-    return                          to_dense(column_matrix_sparse)
+    column_matrix_sparse    =  tf.sparse.slice(    matrix,     [0,index],     [matrix.shape[0],1])
+    return                     tf.sparse.to_dense(column_matrix_sparse)

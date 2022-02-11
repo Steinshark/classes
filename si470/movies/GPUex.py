@@ -126,7 +126,7 @@ matrix_x = tf.convert_to_tensor(df['userId'],dtype=tf.dtypes.int64)
 matrix_y = tf.convert_to_tensor(df['movieId'],dtype=tf.dtypes.int64)
 index = tf.stack([matrix_x,matrix_y],axis=1)
 # Build value tensor
-value = tf.convert_to_tensor(df['rating'],dtype=tf.dtypes.float16)
+value = tf.convert_to_tensor(df['rating'],dtype=tf.dtypes.float64)
 value = tf.transpose(value)
 
 # Info
@@ -159,13 +159,15 @@ for id in user_liked:
     # The movie we know we like
     this_movie = slice_col_sparse(matrix,id)
 
-    for movieId in list(range(n_movies)) not in [id] not in list(closest_movies.keys()):
+    for movieId in list(range(n_movies)):
+        if movieId in [id] + list(closest_movies.keys()):
+            continue
         # movie to check
         column = slice_col_sparse(matrix,movieId)
 
         # check
         distance = euclidean_distance(column,this_movie)
-
+        print(distance)
         if distance < closest_movies[id]['distance']:
             closest_movies[id]['movie']    = movieId
             closest_movies[id]['distance'] = distance
