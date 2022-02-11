@@ -6,19 +6,8 @@ from .terminal import *
 
 # Computes the euclidean distance of tensors A and B
 def euclidean_distance(A,B):
-
-    #ALGORITHM
-
-    # 1 - Calc pointwise difference
-    subMatrix = tf.math.subtract(A,B)
-    # 2 - Find square of distance
-    squareMatrix = tf.math.square(subMatrix)
-
-    # 3 = Find the sum of the square distance
-    sumMatrix = tf.math.reduce_sum(squareMatrix)
-
     # 4 - return the squareroot of the sumMatrix
-    return tf.math.sqrt(sumMatrix)
+    return tf.norm(A-B,ord='euclidean')
 
 
 def slice_col_sparse(matrix,index):

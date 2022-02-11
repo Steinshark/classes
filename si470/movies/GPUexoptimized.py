@@ -192,4 +192,6 @@ class ExecuteJob:
 if __name__ == "__main__":
     movies = [122906,96588,179819,175303,168326,177615,6539,79091,161644,115149,60397,192283,177593,8961]
     job = ExecuteJob(movies)
-    job.run()
+    out = run().numpy()
+    new_f = tf.function(job.run)
+    assert(orig == new_f)
