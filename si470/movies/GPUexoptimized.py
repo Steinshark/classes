@@ -11,13 +11,16 @@ times = {'start' : time()}
 # Package import to work on windows and linux
 sys.path.append("C:\classes")
 sys.path.append("D:\classes")
+sys.path.append("/mnt/d/classes")
 sys.stderr = sys.stdout
+print(sys.path)
 from Toolchain.terminal import *
 from Toolchain.GPUTools import *
 
 
-class ExecuteJob:
 
+class ExecuteJob:
+    @tf.function
     def __init__(self, liked_movies,model_replacement='mean'):
         # Give us some nice things to know and set some settings
         printc(f"Num GPUs Available: {len(tf.config.list_physical_devices('GPU'))}\n\n",GREEN)
@@ -32,6 +35,7 @@ class ExecuteJob:
     ################################################################################
     #                           Manage Logging
     ################################################################################
+    @tf.function
     def prepare_data(self):
         self.datasets = {    'small'     :  {'movies'        : join('ml-latest-small','movies.csv') , 'ratings' : join("ml-latest-small","ratings.csv") , 'tags' : join("ml-latest-small","tags.csv")},
                         'large'     :  {'movies'        : join("ml-latest","movies.csv")       , 'ratings' : join("ml-latest","ratings.csv")       , 'tags' : join('ml-latest',"tags.csv")},
@@ -43,7 +47,7 @@ class ExecuteJob:
 
         self.headers = ["Black Panther","Pitch Perfect","Star Wars: The Last Jedi","It","The Big Sick","Lady Bird","Pirates of the Caribbean","Despicable Me","Coco","John Wick","Mamma Mia","Crazy Rich Asians","Three Billboards Outside Ebbings, Missouri","The Incredibles"]
 
-
+    @tf.function
     def read_data(self):
 
         # Read in all CSVs to DataFrames
@@ -85,7 +89,7 @@ class ExecuteJob:
         # Done with data read!
         printc(f"\tRead Data in {(time()-t1):.3f} seconds",GREEN)
 
-
+    @tf.function
     def show_data(self):
         printc(f"\n\nDATASET: ",BLUE)
 
@@ -101,7 +105,7 @@ class ExecuteJob:
         printc(f"{BLUE}number of movies:      {END}  "   +   \
                     f"{self.n_movies}                                 \n\n",TAN)
 
-
+    @tf.function
     def create_init_tensors(self):
         printc(f"Building Index and Value Tensors\n\n",GREEN)
         t1 = time()
@@ -117,22 +121,22 @@ class ExecuteJob:
         printc(f"\tFinished Tensor build in\t{(time()-t1):.3f} seconds",GREEN)
         printc(f"\tindices:\t{self.indices.shape}\n\tvalues  : {self.values.shape}",GREEN)
 
-
+    @tf.function
     def create_sparse_matrix(self):
         self.matrix      = tf.sparse.reorder(tf.sparse.SparseTensor(indices=self.indices,values=self.values,dense_shape = [self.n_movies,self.n_users]))
         printc(f"SHAPE OF MATR: {self.matrix.shape}",GREEN)
         #self.matrix = tf.sparse.transpose(matrix)
 
-
+    @tf.function
     def belongs_in_list(self,dist):
         return (dist < self.closest_movies[self.checkId]['distance']) and not (self.currentId == self.checkId)
 
-
+    @tf.function
     def place_in_list(self,dist):
         self.closest_movies[self.checkId]['distance'] = dist
         self.closest_movies[self.checkId]['movie']    = self.currentId
 
-
+    @tf.function
     def helper_func(self,row_slice):
         row_slice = tf.sparse.reorder(row_slice)
         # Convert to dense matrix and find distance to movie we are predicting for
@@ -192,6 +196,6 @@ class ExecuteJob:
 if __name__ == "__main__":
     movies = [122906,96588,179819,175303,168326,177615,6539,79091,161644,115149,60397,192283,177593,8961]
     job = ExecuteJob(movies)
-    out = run().numpy()
+    out = job.run().numpy()
     new_f = tf.function(job.run)
     assert(orig == new_f)
