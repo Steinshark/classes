@@ -114,8 +114,6 @@ class ExecuteJob:
         t2 = time()-t1
         printc(f"{n} took {(t2):.3f}s to calculate with {RED}{alg}",GREEN)
         printc(f"\tvar: {tsvd.explained_variance_ratio_.sum(): .4f} in {n} dimensions ",TAN)
-
-        np.save(f"SVD_DECOMP{n}",m_reduced)
         return tsvd.explained_variance_ratio_.sum(), t2
 
 
