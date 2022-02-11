@@ -41,7 +41,7 @@ class ExecuteJob:
     ################################################################################
     def prepare_data(self):
         self.datasets = {    'small'     :  {'movies'        : join('ml-latest-small','movies.csv') , 'ratings' : join("ml-latest-small","ratings.csv") , 'tags' : join("ml-latest-small","tags.csv")},
-                        'large'     :  {'movies'        : join("ml-latest","movies.csv")       , 'ratings' : load_from(self.input_source)       , 'tags' : join('ml-latest',"tags.csv")},
+                        'large'     :  {'movies'        : join("ml-latest","movies.csv")       , 'ratings' : load_from[self.input_source]       , 'tags' : join('ml-latest',"tags.csv")},
                         'usna'      :  {'foodMovies'   : 'foodAndMovies.csv'}}                                #join("ml-latest","ratings.csv")
 
         self.dataframes= {   'small'     :  {'movies'        : None, 'ratings' :  None, 'tags' : None},
