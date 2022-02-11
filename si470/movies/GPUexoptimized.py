@@ -16,7 +16,7 @@ sys.path.append("/mnt/d/classes")
 sys.stderr = sys.stdout
 print(sys.path)
 from Toolchain.terminal import *
-from Toolchain.GPUTools import *
+from Toolchain.gputools import *
 
 
 
@@ -119,6 +119,9 @@ class ExecuteJob:
 
     def create_sparse_matrix(self):
         self.matrix      = tf.sparse.reorder(tf.sparse.SparseTensor(indices=self.indices,values=self.values,dense_shape = [self.n_movies,self.n_users]))
+
+        s,u,v = tf.linalg.svd(self.matrix)
+        input(u)
         printc(f"SHAPE OF MATR: {self.matrix.shape}",GREEN)
         #self.matrix = tf.sparse.transpose(matrix)
 
