@@ -140,7 +140,7 @@ class ExecuteJob:
 
         times = []
         varia = []
-        n_it = [1500]
+        n_it = [5,10,50,100,150,250,550,750,1002,1467,1854]
         try:
             for n in n_it:
                 v, t = self.run_svd(n)
