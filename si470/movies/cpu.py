@@ -23,7 +23,7 @@ from Toolchain.terminal import *
 import signal
 
 def handler(signum, frame):
-    res = input("Ctrl-c was pressed. Do you really want to exit? y/n ")
+    res = input(f"{RED}Ctrl-c was pressed. Do you really want to exit? y/n{END}")
     if res == 'y':
         exit(1)
 

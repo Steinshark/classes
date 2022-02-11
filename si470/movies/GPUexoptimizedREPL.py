@@ -3,22 +3,28 @@ import pandas as pd
 from os.path import join
 import numpy as np
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import sys
 from time import time
 import pprint
 from sklearn.decomposition import TruncatedSVD
-
-times = {'start' : time()}
+import scipy
 # Package import to work on windows and linux
 sys.path.append("C:\classes")
 sys.path.append("D:\classes")
 sys.path.append("/mnt/d/classes")
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 sys.stderr = sys.stdout
-print(sys.path)
 from Toolchain.terminal import *
 from Toolchain.gputools import *
-
+# Make err handling nicer
+printc(f"Num GPUs Available: {len(tf.config.list_physical_devices('GPU'))}\n",GREEN)
+import signal
+def handler(signum, frame):
+    res = input(f"{RED}Ctrl-c was pressed. Do you really want to exit? y/n{END}")
+    if res == 'y':
+        exit(1)
+signal.signal(signal.SIGINT, handler)
+# Init
 load_from = {'newData' : "newData.csv", "full" : join("ml-latest","ratings.csv")}
 
 
@@ -26,9 +32,8 @@ load_from = {'newData' : "newData.csv", "full" : join("ml-latest","ratings.csv")
 class ExecuteJob:
     def __init__(self, liked_movies,model_replacement='mean'):
 
-        self.input_source = input("load from: ")
+        self.input_source = input(f"{TAN}load from:{END} ")
         # Give us some nice things to know and set some settings
-        printc(f"Num GPUs Available: {len(tf.config.list_physical_devices('GPU'))}\n\n",GREEN)
         self.replace = model_replacement
 
         # This will be used to find predictions THEY ARE ALREADY SHIFTED
@@ -54,7 +59,7 @@ class ExecuteJob:
     def read_data(self):
 
         # Read in all CSVs to DataFrames
-        printc(f"BEGIN: Data read from CSV",BLUE)
+        printc(f"\nBEGIN: Data read from CSV",BLUE,endl='')
         t1 = time()
         for size in self.datasets:
             for dset in self.datasets[size]:
@@ -72,7 +77,7 @@ class ExecuteJob:
                                                             'rating'    :   np.float64,
                                                             'timestamp' :   np.float64},
                                             sep     =   ',')
-        printc(f"\tsize: {(self.ratings.memory_usage().sum() / (1024.0*1024.0)):.2f} MB\n\n",TAN)
+        printc(f"\tsize: {(self.ratings.memory_usage().sum() / (1024.0*1024.0)):.2f} MB",TAN)
 
         # Gather the USNA data and prepare it
         self.usna           = pd.read_csv(  self.datasets['usna']['foodMovies'],     sep = ',')[self.headers]
@@ -90,7 +95,7 @@ class ExecuteJob:
         self.n_users                             = int(         self.ratings                           ['userId'].iloc     [-1]        )
 
         # Done with data read!
-        printc(f"\tRead Data in {(time()-t1):.3f} seconds",GREEN)
+        printc(f"Read Data in {(time()-t1):.3f} seconds",GREEN)
 
     def show_data(self):
         printc(f"\n\nDATASET: ",BLUE)
@@ -136,33 +141,34 @@ class ExecuteJob:
         self.matrix      = tf.sparse.reorder(tf.sparse.SparseTensor(indices=self.indices,values=self.values,dense_shape = [self.n_movies,self.n_users]))
         printc(f"{type(self.matrix)} SHAPE OF: {self.matrix.shape}",GREEN)
 
-    def create_reduced_dense_matrix(n,alg='randomized',iters=5):
+    def create_reduced_dense_matrix(self,n,alg='randomized',iters=5):
 
         # LOGGING
         printc(f"\nReducing ({self.n_movies},{self.n_users}) to ({self.n_movies},{n})",BLUE)
-        self.n_users = n
         t1 = time()
 
     # Build sparse matrix
         rows = self.ratings['movieId'] - 1
         cols =  self.ratings['userId'] - 1
+
         matrix_sparse = scipy.sparse.coo_matrix((self.ratings['rating'],(rows,cols)),shape=[self.n_movies,self.n_users])
         # LOGGING
         t2 = time()
-        printc(f"\tcreated sparse in {(t2-t1:.3f)} seconds",TAN)
+        printc(f"\tcreated sparse in {(t2-t1):.3f} seconds",TAN)
 
     # Reshape with TSV
         tsvd = TruncatedSVD(n_components=n, algorithm=alg,n_iter=iters)
         dense_reduced = tsvd.fit_transform(matrix_sparse)
         #LOGGING
         t3 = time()
-        printc(f"\tcreated svd in time{(t3-t2):.3f} seconds",TAN)
+        printc(f"\tcreated svd in {(t3-t2):.3f} seconds",TAN)
 
     # Final matrix result
+        self.n_users = n
         self.matrix = tf.convert_to_tensor(dense_reduced,dtype=self.f_64)
         # LOGGING
         t4 = time()
-        printc(f"\tcreated tensor in time{(t4-t3):.3f} seconds",TAN)
+        printc(f"\tcreated tensor in {(t4-t3):.3f} seconds",TAN)
 
     def belongs_in_list(self,dist):
         return (dist < self.closest_movies[self.checkId]['distance']) and not (self.currentId == self.checkId)
@@ -192,6 +198,7 @@ class ExecuteJob:
 
     @tf.function
     def run(self):
+        t1 = time()
         self.closest_movies = {  movieId        :   {'movie' : 0, 'distance' : 10000.0} for movieId in self.liked_movies }
 
         self.movie_distances = { movieId      :   None for movieId in self.liked_movies}
@@ -199,14 +206,13 @@ class ExecuteJob:
         for id in self.liked_movies:
             self.B = slice_row_sparse(self.matrix,id-1)
 
-            distances = tf.map_fn(  self.euclidean_caller,
-                                    self.matrix,
-                                    dtype=tf.dtypes.float64)
-            input(distances)
+            dists,index = tf.map_fn(   self.euclidean_caller,
+                                                    self.matrix)
+            self.movie_distances[id] = {i : d for i,d in zip(index,dists)}
 
-        with open("output",'w') as file:
-            file.write(pprint.pformat(self.closest_movies))
+        pp(self.movie_distances)
         printc(f"FINISHED IN {time()-t1} seconds",GREEN)
+        input()
 
 if __name__ == "__main__":
     movies = [122906,96588,179819,175303,168326,177615,6539,79091,161644,115149,60397,192283,177593,8961]
