@@ -10,7 +10,7 @@ import pprint
 
 times = {'start' : time()}
 # Package import to work on windows and linux
-sys.path.append("C:\classes")
+sys.path.append("C:\classes\")
 sys.path.append("D:\classes")
 sys.path.append("/mnt/d/classes")
 sys.stderr = sys.stdout
