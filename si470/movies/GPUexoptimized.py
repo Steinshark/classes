@@ -18,15 +18,19 @@ print(sys.path)
 from Toolchain.terminal import *
 from Toolchain.gputools import *
 
+load_from = {'newData' : "newData.csv", "full" : join("ml-latest","ratings.csv")}
+
 
 
 class ExecuteJob:
     def __init__(self, liked_movies,model_replacement='mean'):
+
+        slef.input_source = input("load from: ")
         # Give us some nice things to know and set some settings
         printc(f"Num GPUs Available: {len(tf.config.list_physical_devices('GPU'))}\n\n",GREEN)
         self.replace = model_replacement
         # This will be used to find predictions
-        self.liked_movies = [122906,96588,179819,175303,168326,177615,6539,79091,161644,115149,60397,192283,177593,8961]
+        self.liked_movies = liked_movies
 
         # Type definitions
         self.f_64 = tf.dtypes.float64
@@ -37,7 +41,7 @@ class ExecuteJob:
     ################################################################################
     def prepare_data(self):
         self.datasets = {    'small'     :  {'movies'        : join('ml-latest-small','movies.csv') , 'ratings' : join("ml-latest-small","ratings.csv") , 'tags' : join("ml-latest-small","tags.csv")},
-                        'large'     :  {'movies'        : join("ml-latest","movies.csv")       , 'ratings' : join("ml-latest","ratings.csv")       , 'tags' : join('ml-latest',"tags.csv")},
+                        'large'     :  {'movies'        : join("ml-latest","movies.csv")       , 'ratings' : load_from(self.input_source)       , 'tags' : join('ml-latest',"tags.csv")},
                         'usna'      :  {'foodMovies'   : 'foodAndMovies.csv'}}                                #join("ml-latest","ratings.csv")
 
         self.dataframes= {   'small'     :  {'movies'        : None, 'ratings' :  None, 'tags' : None},
@@ -117,7 +121,7 @@ class ExecuteJob:
         printc(f"\tFinished Tensor build in\t{(time()-t1):.3f} seconds",GREEN)
         printc(f"\tindices:\t{self.indices.shape}\n\tvalues  : {self.values.shape}",GREEN)
 
-    def create_sparse_matrix(self):
+    def load_sparse_matrix(self):
         self.matrix      = tf.sparse.reorder(tf.sparse.SparseTensor(indices=self.indices,values=self.values,dense_shape = [self.n_movies,self.n_users]))
 
         s,u,v = tf.linalg.svd(self.matrix)
@@ -191,6 +195,6 @@ class ExecuteJob:
             printc(f"FINISHED IN {time()-t1} seconds",GREEN)
 
 if __name__ == "__main__":
-    movies = [122906,96588,179819,175303,168326,177615,6539,79091,161644,115149,60397,192283,177593,8961]
+    movies = map(lambda x : x - 1, [122906,96588,179819,175303,168326,177615,6539,79091,161644,115149,60397,192283,177593,8961])
     job = ExecuteJob(movies)
     job.run()
