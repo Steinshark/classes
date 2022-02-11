@@ -25,6 +25,12 @@ def euclidean_distance(A,B):
     # 4 - return the squareroot of the sumMatrix
     return tf.sqrt(sumMatrix)
 
+
 def slice_col_sparse(matrix,index):
-    column_matrix_sparse    =  tf.sparse.slice(    matrix,     [0,index],     [matrix.shape[0],1])
-    return                     tf.sparse.to_dense(column_matrix_sparse)
+    column_matrix_sparse    =   tf.sparse.slice(    matrix,     [0,index],     [matrix.shape[0],1])
+    return                      tf.sparse.to_dense(column_matrix_sparse)
+
+
+def slice_row_sparse(matrix,index):
+    row_matrix_sparse       =   tf.sparse.slice(    matrix,     [index,0],     [1,matrix.shape[1]])
+    return                      tf.sparse.to_dense(row_matrix_sparse)

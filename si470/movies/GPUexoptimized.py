@@ -11,163 +11,182 @@ times = {'start' : time()}
 # Package import to work on windows and linux
 sys.path.append("C:\classes")
 sys.path.append("D:\classes")
+sys.stderr = sys.stdout
 from Toolchain.terminal import *
-from Toolchain.GPUTools import euclidean_distance, slice_col_sparse
+from Toolchain.GPUTools import *
+
+
+class ExecuteJob:
+
+    def __init__(self, liked_movies,model_replacement='mean'):
+        # Give us some nice things to know and set some settings
+        printc(f"Num GPUs Available: {len(tf.config.list_physical_devices('GPU'))}\n\n",GREEN)
+        tf.debugging.set_log_device_placement(True)
+        self.replace = model_replacement
+        # This will be used to find predictions
+        self.liked_movies = [122906,96588,179819,175303,168326,177615,6539,79091,161644,115149,60397,192283,177593,8961]
+
+        # Type definitions
+        self.f_64 = tf.dtypes.float64
+        self.i_32 = tf.dtypes.int32
+        self.i_64 = tf.dtypes.int64
+    ################################################################################
+    #                           Manage Logging
+    ################################################################################
+    def prepare_data(self):
+        self.datasets = {    'small'     :  {'movies'        : join('ml-latest-small','movies.csv') , 'ratings' : join("ml-latest-small","ratings.csv") , 'tags' : join("ml-latest-small","tags.csv")},
+                        'large'     :  {'movies'        : join("ml-latest","movies.csv")       , 'ratings' : join("ml-latest","ratings.csv")       , 'tags' : join('ml-latest',"tags.csv")},
+                        'usna'      :  {'foodMovies'   : 'foodAndMovies.csv'}}
+
+        self.dataframes= {   'small'     :  {'movies'        : None, 'ratings' :  None, 'tags' : None},
+                        'large'     :  {'movies'        : None, 'ratings' :  None, 'tags' : None}}
+
+
+        self.headers = ["Black Panther","Pitch Perfect","Star Wars: The Last Jedi","It","The Big Sick","Lady Bird","Pirates of the Caribbean","Despicable Me","Coco","John Wick","Mamma Mia","Crazy Rich Asians","Three Billboards Outside Ebbings, Missouri","The Incredibles"]
+
+
+    def read_data(self):
+
+        # Read in all CSVs to DataFrames
+        printc(f"BEGIN: Data read from CSV",BLUE)
+        t1 = time()
+        for size in self.datasets:
+            for dset in self.datasets[size]:
+                if not (size == 'large' and dset == 'ratings') and not (size == 'usna' and dset == 'foodMovies'):
+                    # Read and print status
+                    printc(f"\n\treading {dset}-{size}",TAN,endl='')
+                    self.dataframes[size][dset]   = pd.read_csv(self.datasets[size][dset],sep=',')
+                    printc(f"\n\tsize: {(self.dataframes[size][dset].memory_usage().sum() / (1024.0*1024.0)):.2f} MB",TAN,endl='')
+
+        # Read larger 'ratings' dataset
+        printc(f"\n\treading ratings-large",TAN)
+        self.ratings        = pd.read_csv(  self.datasets['large']['ratings'],
+                                            dtype   =   {   'userId'    :   np.float32,
+                                                            'movieId'   :   np.float32,
+                                                            'rating'    :   np.float64,
+                                                            'timestamp' :   np.float64},
+                                            sep     =   ',')
+        printc(f"\tsize: {(self.ratings.memory_usage().sum() / (1024.0*1024.0)):.2f} MB\n\n",TAN)
+
+        # Gather the USNA data and prepare it
+        self.usna           = pd.read_csv(  self.datasets['usna']['foodMovies'],     sep = ',')[self.headers]
+
+        # Fix USNA data with MEAN
+        for col in self.headers:
+            if self.replace     == 'mean':
+                replacement = self.usna[col].mean()
+            elif self.replace   == 'zero':
+                replacement = 0
+            self.usna[col].fillna(value = 0, inplace = True)
+
+        # Some helpful constants                                  dataset                             column                index
+        self.n_movies                            = int(         self.dataframes['large']['movies']     ['movieId'].iloc    [-1]        ))
+        self.n_users                             = int(         self.ratings                           ['userId'].iloc     [-1]        )
+
+        # Done with data read!
+        printc(f"\tRead Data in {(time()-t1):.3f} seconds",GREEN)
+
+
+    def show_data(self):
+        printc(f"\n\nDATASET: ",BLUE)
+
+        printc(f"\t {BLUE}'ratings' looks like:  {END}\n"   +   \
+                    f"{self.ratings.head(3)}                               \n\n",TAN)
+
+        printc(f"\t {BLUE}'movies' looks like:   {END}\n"   +   \
+                    f"{self.dataframes['large']['movies'].head(3)}    \n\n",TAN)
+
+        printc(f"\t {BLUE}number of users:       {END}  "   +   \
+                    f"{self.n_users}                                  ",TAN)
+
+        printc(f"\t {BLUE}number of movies:      {END}  "   +   \
+                    f"{self.n_movies}                                 \n\n",TAN)
+
+
+    def create_init_tensors(self):
+        printc(f"Building Index and Value Tensors\n\n",GREEN)
+        t1 = time()
+
+        # Set x,y index arrays and build index tensor (n_movies,x)
+        matrix_x        = tf.convert_to_tensor(self.ratings['userId'],  dtype=self.i_64)
+        matrix_y        = tf.convert_to_tensor(self.ratings['movieId'], dtype=self.i_64)
+        self.indices    = tf.stack( [matrix_y,matrix_x],    axis = 1)
+
+        # Build value tensor
+        self.values     = tf.convert_to_tensor(self.ratings['rating'],  dtype=self.f_64)
+
+        # Info
+        printc(f"\tFinished Tensor build in\t{(time()-t1):.3f} seconds",GREEN)
+        printc(f"\tindices:\t{self.indices.shape}\n\tvalues  : {self.values.shape}",GREEN)
+
+
+    def create_sparse_matrix(self):
+        matrix      = tf.sparse.SparseTensor(indices=self.indices,values=self.values,dense_shape=[self.n_movies,self.n_users])
+        self.matrix = tf.sparse.reorder(matrix)
+        #self.matrix = tf.sparse.transpose(matrix)
+
+
+    def belongs_in_list(self,dist):
+        return (dist < self.closest_movies[self.checkId]['distance']) and not (self.currentId == self.checkId)
+
+
+    def place_in_list(self,dist):
+        closest_movies[self.checkId]['distance'] = dist
+        closest_movies[self.checkId]['movie']    = self.currentId
+
+
+    def helper_func(row_slice):
+        # Convert to dense matrix and find distance to movie we are predicting for
+        dense_row = tf.sparse.to_dense(row_slice)
+        distance = euclidean_distance(dense_row, self.current_movie)
+
+        # Update the current movies list
+        if self.belongs_in_list():
+            printc(f"updated movie {self.checkId} to {self.currentId} dist {distance}",TAN)
+            self.place_in_list(distance)
+        return distance
+
+
+    def run(self):
+        # Prepare the datasets with defintions for filenames
+        self.prepare_data()
+
+        # Load the data into RAM
+        self.read_data()
+
+        # Give the user some useful things to know
+        self.show_data()
+
+        # Init our tensors for building the matrix later
+        self.create_init_tensors()
+        # Build our full sparse matrix (n_movies,n_users)
+        self.create_sparse_matrix()
+
+        self.closest_movies = {  movieId     :   {'movie' : 0, 'distance' : 10000} for movieId in self.liked_movies }
 
 
 
-################################################################################
-#                           Manage Logging
-################################################################################
-printc(f"Num GPUs Available: {len(tf.config.list_physical_devices('GPU'))}\n\n",GREEN)
-tf.debugging.set_log_device_placement(True)
+        ################################################################################
+        #                           get slices
+        ###############################################################################
 
-################################################################################
-#                           DATASET NAME DEFINITIONS
-################################################################################
+        for id in self.liked_movies:
 
-datasets = {    'small'     :  {'movies'        : join('ml-latest-small','movies.csv') , 'ratings' : join("ml-latest-small","ratings.csv") , 'tags' : join("ml-latest-small","tags.csv")},
-                'large'     :  {'movies'        : join("ml-latest","movies.csv")       , 'ratings' : join("ml-latest","ratings.csv")       , 'tags' : join('ml-latest',"tags.csv")},
-                'usna'      :  {'foodMovies'   : 'foodAndMovies.csv'}}
+            # The movie we know we like
+            self.checkId = id
+            input(slice_row_sparse(self.matrix,1))
+            self.current_movie = slice_row_sparse(self.matrix,id)
 
-dataframes= {   'small'     :  {'movies'        : None, 'ratings' :  None, 'tags' : None},
-                'large'     :  {'movies'        : None, 'ratings' :  None, 'tags' : None}}
+            # update the current movie recommendations
+            distances = tf.map_fn(  self.helper_func,
+                                    self.matrix,
+                                    dtype=tf.dtypes.float64)
 
-
-headers = ["Black Panther","Pitch Perfect","Star Wars: The Last Jedi","It","The Big Sick","Lady Bird","Pirates of the Caribbean","Despicable Me","Coco","John Wick","Mamma Mia","Crazy Rich Asians","Three Billboards Outside Ebbings, Missouri","The Incredibles"]
-################################################################################
-#                           Read into DataFrame
-################################################################################
-printc(f"BEGIN: Data read from CSV",BLUE)
-times['dread_s'] = time()
-for size in datasets:
-    for dset in datasets[size]:
-        if not (size == 'large' and set == 'ratings') and not (size == 'usna' and dset == 'foodMovies'):
-            printc(f"\treading {dset}-{size}",TAN,endl='')
-            dataframes[size][dset]   = pd.read_csv(datasets[size][dset],sep=',')
-
-            printc(f"\tsize: {(dataframes[size][dset].memory_usage().sum() / (1024.0*1024.0)):.2f} MB",TAN)
-
-################################################################################
-#                           Read into DataFrame
-################################################################################
-
-printc(f"\treading ratings-large",TAN)
-f_64 = np.float64
-df                                  = pd.read_csv(  datasets['large']['ratings'],   sep = ',',dtype={'userId':f_64,'movieId':f_64,'rating':f_64, 'timestamp':f_64})
-usna                                = pd.read_csv(  datasets['usna']['foodMovies'],   sep = ',')
-usna                                = usna[headers]
-for col in headers:
-    col_mean = usna[col].mean()
-    usna[col].fillna(value=col_mean,inplace = True)
-
-################################################################################
-#                           Gather constants
-################################################################################
-#                                                   # dataset                           # column        #index
-n_movies                            = int(  len(    dataframes['large']['movies']       ['movieId']                 ))
-n_users                             = int(          dataframes['large']['ratings']      ['userId'].iloc      [-1]        )
+        with open("output",'w') as file:
+            file.write(pprint.pformat(self.closest_movies))
 
 
-################################################################################
-#                           Convert USNA matrix to Workable Sparse Tensor
-################################################################################
-
-# Constant to have on hand
-user_liked = [122906,96588,179819,175303,168326,177615,6539,79091,161644,115149,60397,192283,177593,8961]
-#
-## Split rows to lists (of ratings)
-#users = usna.values.tolist()
-#usna_matrices = []
-#
-## Fill
-#for row in users:
-#    vals = tf.convert_to_tensor(row,dtype=tf.dtypes.float16)
-#    user_matrix = tf.sparse.SparseTensor(       indices = usna_movie_indexes,     values = vals,   dense_shape = [n_movies] )
-#    usna_matrices.append(user_matrix)
-
-
-
-################################################################################
-#                           Get USNA Movies
-###############################################################################
-
-
-
-
-################################################################################
-#                           Define a dictonary to map neighbors
-###############################################################################
-
-
-################################################################################
-#                           Show Data
-################################################################################
-
-printc(f"\n\nDATASET: ",BLUE)
-printc(f"\t{BLUE}'ratings' looks like:  {END}\n     {df.head(3)}\n\n",TAN)
-printc(f"\t{BLUE}'movies' looks like:   {END}\n     {dataframes['large']['movies'].head(3)}\n\n",TAN)
-
-printc(f"\t{BLUE}number of users:       {END}       {n_users}",TAN)
-printc(f"\t{BLUE}number of movies:      {END}       {n_movies}\n\n",TAN)
-
-################################################################################
-#                           Build Matrix indices and values
-################################################################################
-
-printc(f"Building Index and Value Tensors\n\n",GREEN)
-t1 = time()
-# Set x,y index arrays and build index tensor (2,x)
-matrix_x = tf.convert_to_tensor(df['userId'],dtype=tf.dtypes.int64)
-matrix_y = tf.convert_to_tensor(df['movieId'],dtype=tf.dtypes.int64)
-index = tf.stack([matrix_x,matrix_y],axis=1)
-# Build value tensor
-value = tf.convert_to_tensor(df['rating'],dtype=tf.dtypes.float64)
-value = tf.transpose(value)
-
-# Info
-printc(f"Finished Tensor build in\t{(time()-t1):.3f} seconds",GREEN)
-printc(f"\tindices:\t{index.shape}\n\tvalue: {value.shape}",GREEN)
-
-
-################################################################################
-#                           Build Sparse Matrix
-################################################################################
-
-matrix = tf.sparse.SparseTensor(indices=index,values=value,dense_shape=[matrix_y.shape[0],matrix_x.shape[0]])
-
-################################################################################
-#                           Define a dictonary to map neighbors
-###############################################################################
-closest_movies = {
-                movieId     :   {'movie' : 0, 'distance' : 10000} for movieId in user_liked
-}
-
-
-
-def helper_func(dist,current_i):
-    global x
-    x += 1
-
-    if dist < closest_movies[i]['distance'] and not x == current_i:
-        printc(f"updated movie {current_i} to {x} dist {dist}")
-        closest_movies[i]['distance'] = dist
-        closest_movies[i]['movie']    = x
-
-
-
-
-
-################################################################################
-#                           get slices
-###############################################################################
-
-for id in user_liked:
-    # The movie we know we like
-    this_movie = slice_col_sparse(matrix,id)
-
-    x = 0
-    distances = tf.map_fn(lambda A :  helper_func(tf.reduce_sum(tf.square(A - this_movie)), id), matrix, dtype=tf.dtypes.float64)
-
-with open("output",'w') as file:
-    file.write(pprint.pformat(closest_movies))
+if __name__ == "__main__":
+    movies = [122906,96588,179819,175303,168326,177615,6539,79091,161644,115149,60397,192283,177593,8961]
+    job = ExecuteJob(movies)
+    job.run()
