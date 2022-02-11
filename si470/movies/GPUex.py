@@ -12,11 +12,8 @@ times = {'start' : time()}
 sys.path.append("C:\classes")
 sys.path.append("D:\classes")
 from Toolchain.terminal import *
-from Toolchain.GPUTools import euclidean_distance, slice_col_sparse
-try:
-except ModuleNotFoundError:
-    sys.path.append("/home/m226252/classes")
-    from Toolchain.terminal import *
+from Toolchain.gpuTools import euclidean_distance, slice_col_sparse
+
 
 
 ################################################################################
