@@ -25,7 +25,7 @@ load_from = {'newData' : "newData.csv", "full" : join("ml-latest","ratings.csv")
 class ExecuteJob:
     def __init__(self, liked_movies,model_replacement='mean'):
 
-        slef.input_source = input("load from: ")
+        self.input_source = input("load from: ")
         # Give us some nice things to know and set some settings
         printc(f"Num GPUs Available: {len(tf.config.list_physical_devices('GPU'))}\n\n",GREEN)
         self.replace = model_replacement
