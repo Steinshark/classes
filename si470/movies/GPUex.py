@@ -12,7 +12,7 @@ times = {'start' : time()}
 sys.path.append("C:\classes")
 sys.path.append("D:\classes")
 from Toolchain.terminal import *
-from Toolchain.gpuTools import euclidean_distance, slice_col_sparse
+from .Toolchain.gpuTools import euclidean_distance, slice_col_sparse
 
 
 
