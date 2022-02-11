@@ -154,21 +154,21 @@ class ExecuteJob:
         matrix_sparse = scipy.sparse.coo_matrix((self.ratings['rating'],(rows,cols)),shape=[self.n_movies,self.n_users])
         # LOGGING
         t2 = time()
-        printc(f"\tcreated sparse in {(t2-t1):.3f} seconds",TAN)
+        printc(f"\tcreated sparse in {RED}{(t2-t1):.3f}{TAN} seconds",TAN)
 
     # Reshape with TSV
         tsvd = TruncatedSVD(n_components=n, algorithm=alg,n_iter=iters)
         dense_reduced = tsvd.fit_transform(matrix_sparse)
         #LOGGING
         t3 = time()
-        printc(f"\tcreated svd in {(t3-t2):.3f} seconds",TAN)
+        printc(f"\tcreated svd in {RED}{(t3-t2):.3f}{TAN} seconds",TAN)
 
     # Final matrix result
         self.n_users = n
         self.matrix = tf.convert_to_tensor(dense_reduced,dtype=self.f_64)
         # LOGGING
         t4 = time()
-        printc(f"\tcreated tensor in {(t4-t3):.3f} seconds",TAN)
+        printc(f"\tcreated tensor in {RED}{(t4-t3):.3f}{TAN} seconds",TAN)
 
     def belongs_in_list(self,dist):
         return (dist < self.closest_movies[self.checkId]['distance']) and not (self.currentId == self.checkId)
