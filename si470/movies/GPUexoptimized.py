@@ -38,7 +38,7 @@ class ExecuteJob:
     def prepare_data(self):
         self.datasets = {    'small'     :  {'movies'        : join('ml-latest-small','movies.csv') , 'ratings' : join("ml-latest-small","ratings.csv") , 'tags' : join("ml-latest-small","tags.csv")},
                         'large'     :  {'movies'        : join("ml-latest","movies.csv")       , 'ratings' : join("ml-latest","ratings.csv")       , 'tags' : join('ml-latest',"tags.csv")},
-                        'usna'      :  {'foodMovies'   : 'foodAndMovies.csv'}}
+                        'usna'      :  {'foodMovies'   : 'foodAndMovies.csv'}}                                #join("ml-latest","ratings.csv")
 
         self.dataframes= {   'small'     :  {'movies'        : None, 'ratings' :  None, 'tags' : None},
                         'large'     :  {'movies'        : None, 'ratings' :  None, 'tags' : None}}
@@ -133,7 +133,7 @@ class ExecuteJob:
         row_slice = tf.sparse.reorder(row_slice)
         # Convert to dense matrix and find distance to movie we are predicting for
         dense_row = tf.sparse.to_dense(row_slice)
-        distance = euclidean_distance(dense_row, self.current_movie)
+        distance = euclidean_distance(dense_row, self.current_movie).eval()
         # Update the current movies list
         if self.belongs_in_list(distance):
             self.place_in_list(distance)
@@ -161,29 +161,30 @@ class ExecuteJob:
         # Build our full sparse matrix (n_movies,n_users)
         self.create_sparse_matrix()
 
-        self.closest_movies = {  movieId     :   {'movie' : 0, 'distance' : 10000} for movieId in self.liked_movies }
+        self.closest_movies = {  movieId     :   {'movie' : 0, 'distance' : 10000.0} for movieId in self.liked_movies }
 
 
 
         ################################################################################
         #                           get slices
         ###############################################################################
+        with sess.as_default():
+            t1 = time()
+            for id in self.liked_movies:
 
-        for id in self.liked_movies:
+                # The movie we know we like
+                self.checkId = id
+                self.current_movie = slice_row_sparse(self.matrix,id)
+                self.currentId = 0
+                # update the current movie recommendations
+                self.t1=time()
+                distances = tf.map_fn(  self.helper_func,
+                                        self.matrix,
+                                        dtype=tf.dtypes.float64)
 
-            # The movie we know we like
-            self.checkId = id
-            self.current_movie = slice_row_sparse(self.matrix,id)
-            self.currentId = 0
-            # update the current movie recommendations
-            self.t1=time()
-            distances = tf.map_fn(  self.helper_func,
-                                    self.matrix,
-                                    dtype=tf.dtypes.float64)
-
-        with open("output",'w') as file:
-            file.write(pprint.pformat(self.closest_movies))
-
+            with open("output",'w') as file:
+                file.write(pprint.pformat(self.closest_movies))
+            printc(f"FINISHED IN {time()-t1} seconds",GREEN)
 
 if __name__ == "__main__":
     movies = [122906,96588,179819,175303,168326,177615,6539,79091,161644,115149,60397,192283,177593,8961]
