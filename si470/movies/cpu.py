@@ -1,37 +1,40 @@
-import tensorflow as tf
 import pandas as pd
 from os.path import join
 import numpy as np
+
+import scipy
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import sys
 from time import time
 import pprint
+from sklearn.decomposition import SparsePCA, IncrementalPCA, TruncatedSVD
+from sklearn.neighbors import KNeighborsClassifier
+
+from matplotlib import pyplot as plt
 
 times = {'start' : time()}
 # Package import to work on windows and linux
 sys.path.append("C:\classes")
 sys.path.append("D:\classes")
-sys.path.append("/mnt/d/classes")
-sys.stderr = sys.stdout
-print(sys.path)
+
 from Toolchain.terminal import *
-from Toolchain.GPUTools import *
 
+import signal
 
+def handler(signum, frame):
+    res = input("Ctrl-c was pressed. Do you really want to exit? y/n ")
+    if res == 'y':
+        exit(1)
+
+signal.signal(signal.SIGINT, handler)
 
 class ExecuteJob:
     def __init__(self, liked_movies,model_replacement='mean'):
         # Give us some nice things to know and set some settings
-        printc(f"Num GPUs Available: {len(tf.config.list_physical_devices('GPU'))}\n\n",GREEN)
         self.replace = model_replacement
         # This will be used to find predictions
         self.liked_movies = [122906,96588,179819,175303,168326,177615,6539,79091,161644,115149,60397,192283,177593,8961]
 
-        # Type definitions
-        self.f_64 = tf.dtypes.float64
-        self.i_32 = tf.dtypes.int32
-        self.i_64 = tf.dtypes.int64
     ################################################################################
     #                           Manage Logging
     ################################################################################
@@ -102,50 +105,26 @@ class ExecuteJob:
         printc(f"{BLUE}number of movies:      {END}  "   +   \
                     f"{self.n_movies}                                 \n\n",TAN)
 
-    def create_init_tensors(self):
-        printc(f"Building Index and Value Tensors\n\n",GREEN)
+    def run_svd(self,n):
         t1 = time()
 
-        # Set x,y index arrays and build index tensor (n_movies,x)
-        matrix_x        = tf.convert_to_tensor(self.ratings['userId'].apply(lambda x : x - 1),  dtype=self.i_64)
-        matrix_y        = tf.convert_to_tensor(self.ratings['movieId'].apply(lambda x : x - 1), dtype=self.i_64)
-        self.indices    = tf.stack( [matrix_y,matrix_x],    axis = 1)
-        # Build value tensor
-        self.values     = tf.convert_to_tensor(self.ratings['rating'],  dtype=self.f_64)
-        self.values    =  tf.transpose(self.values)
-        # Info
-        printc(f"\tFinished Tensor build in\t{(time()-t1):.3f} seconds",GREEN)
-        printc(f"\tindices:\t{self.indices.shape}\n\tvalues  : {self.values.shape}",GREEN)
+        tsvd = TruncatedSVD(n_components=n)
+        m_reduced = tsvd.fit_transform(self.matrix)
+        t2 = time()-t1
+        printc(f"Took {(t2):.3f} seconds to calculate",GREEN)
+        printc(f"\tvar: {tsvd.explained_variance_ratio_.sum(): .4f} in {n} dimensions ",TAN)
 
-    def create_sparse_matrix(self):
-        self.matrix      = tf.sparse.reorder(tf.sparse.SparseTensor(indices=self.indices,values=self.values,dense_shape = [self.n_movies,self.n_users]))
-        printc(f"SHAPE OF MATR: {self.matrix.shape}",GREEN)
-        #self.matrix = tf.sparse.transpose(matrix)
+        np.save(f"SVD_DECOMP{n}",m_reduced)
+        return tsvd.explained_variance_ratio_.sum(), t2
 
-    def belongs_in_list(self,dist):
-        return (dist < self.closest_movies[self.checkId]['distance']) and not (self.currentId == self.checkId)
 
-    def place_in_list(self,dist):
-        self.closest_movies[self.checkId]['distance'] = dist
-        self.closest_movies[self.checkId]['movie']    = self.currentId
 
-    def helper_func(self,row_slice):
-        row_slice = tf.sparse.reorder(row_slice)
-        # Convert to dense matrix and find distance to movie we are predicting for
-        dense_row = tf.sparse.to_dense(row_slice)
-        distance = euclidean_distance(dense_row, self.current_movie)
-        # Update the current movies list
-        if self.belongs_in_list(distance):
-            self.place_in_list(distance)
-        self.currentId =  (1 + self.currentId) % self.n_movies
-        if self.currentId % 10000 == 0:
-            printc(f"took {(time()-self.t1):.3f} to calc 10000",GREEN)
-            self.t1 = time()
-        if self.currentId == 0:
-            input("made it through a row!",GREEN)
-        return distance
+    def create_matrix(self):
+        rows = self.ratings['movieId'] - 1
+        cols =  self.ratings['userId'] - 1
+        self.matrix = scipy.sparse.coo_matrix((self.ratings['rating'],(rows,cols)),shape=[self.n_movies,self.n_users])
 
-    @tf.function
+
     def run(self):
         # Prepare the datasets with defintions for filenames
         self.prepare_data()
@@ -157,34 +136,21 @@ class ExecuteJob:
         self.show_data()
 
         # Init our tensors for building the matrix later
-        self.create_init_tensors()
-        # Build our full sparse matrix (n_movies,n_users)
-        self.create_sparse_matrix()
+        self.create_matrix()
 
-        self.closest_movies = {  movieId     :   {'movie' : 0, 'distance' : 10000} for movieId in self.liked_movies }
-
-
-
-        ################################################################################
-        #                           get slices
-        ###############################################################################
-
-        for id in self.liked_movies:
-
-            # The movie we know we like
-            self.checkId = id
-            self.current_movie = slice_row_sparse(self.matrix,id)
-            self.currentId = 0
-            # update the current movie recommendations
-            self.t1=time()
-            distances = tf.map_fn(  self.helper_func,
-                                    self.matrix,
-                                    dtype=tf.dtypes.float64)
-
-        with open("output",'w') as file:
-            file.write(pprint.pformat(self.closest_movies))
-
-
+        times = []
+        varia = []
+        n_it = [5,10,50,100,150,250,550,750,1002,1467,1854]
+        try:
+            for n in n_it:
+                v, t = self.run_svd(n)
+                times.append(t)
+                varia.append(v/60)
+        except:
+            pass
+        plt.plot(n_it,varia,"r-")
+        plt.plot(n_it,times,"b--")
+        plt.show()
 if __name__ == "__main__":
     movies = [122906,96588,179819,175303,168326,177615,6539,79091,161644,115149,60397,192283,177593,8961]
     job = ExecuteJob(movies)

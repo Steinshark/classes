@@ -3,7 +3,6 @@ docword.nytimes.txt
 *__pycache__*
 decomp*
 *.npz
-*.npy
 newData*
 *.csv
 *.docword.nytimes.txt
