@@ -7,6 +7,7 @@ import sys
 from time import time
 import pprint
 from sklearn.decomposition import TruncatedSVD
+from matplotlib import pyplot as plt
 import scipy
 # Package import to work on windows and linux
 sys.path.append("C:\classes")
@@ -33,7 +34,7 @@ load_from = {'newData' : "newData.csv", "full" : join("ml-latest","ratings.csv")
 class ExecuteJob:
     def __init__(self, liked_movies,model_replacement='mean'):
 
-        self.input_source = input(f"{TAN}load from:{END} ")
+        self.input_source = "full"
         # Give us some nice things to know and set some settings
         self.replace = model_replacement
 
@@ -143,29 +144,34 @@ class ExecuteJob:
         self.matrix      = tf.sparse.reorder(tf.sparse.SparseTensor(indices=self.indices,values=self.values,dense_shape = [self.n_movies,self.n_users]))
         printc(f"{type(self.matrix)} SHAPE OF: {self.matrix.shape}",GREEN)
 
-    def create_reduced_dense_matrix(self,n,alg='randomized',iters=5):
+    def create_reduced_dense_matrix(self,n,alg='randomized',iters=5,filename=''):
 
+        importing = not (filename == '')
         # LOGGING
         printc(f"\nReducing ({self.n_movies},{self.n_users}) to ({self.n_movies},{n})",BLUE)
         t1 = time()
 
+        if not importing:
     # Build sparse matrix
-        rows = self.ratings['movieId'] - 1
-        cols =  self.ratings['userId'] - 1
+            rows = self.ratings['movieId'] - 1
+            cols =  self.ratings['userId'] - 1
 
-        matrix_sparse = scipy.sparse.coo_matrix((self.ratings['rating'],(rows,cols)),shape=[self.n_movies,self.n_users])
-        # LOGGING
-        t2 = time()
-        printc(f"\tcreated sparse in {RED}{(t2-t1):.3f}{TAN} seconds",TAN)
+            matrix_sparse = scipy.sparse.coo_matrix((self.ratings['rating'],(rows,cols)),shape=[self.n_movies,self.n_users])
+            # LOGGING
+            t2 = time()
+            printc(f"\tcreated sparse in {RED}{(t2-t1):.3f}{TAN} seconds",TAN)
 
     # Reshape with TSV
-        tsvd = TruncatedSVD(n_components=n, algorithm=alg,n_iter=iters)
-        dense_reduced = tsvd.fit_transform(matrix_sparse)
-        #LOGGING
-        t3 = time()
-        printc(f"\tcreated svd in {RED}{(t3-t2):.3f}{TAN} seconds",TAN)
-
+            tsvd = TruncatedSVD(n_components=n, algorithm=alg,n_iter=iters)
+            dense_reduced = tsvd.fit_transform(matrix_sparse)
+            #LOGGING
+            t3 = time()
+            printc(f"\tcreated svd in {RED}{(t3-t2):.3f}{TAN} seconds",TAN)
+        else:
+            printc(f"\timporting reduced from: {filename}",TAN)
+            dense_reduced = np.load(filename)
     # Final matrix result
+        t3 = time()
         self.n_users = n
         self.matrix = tf.convert_to_tensor(dense_reduced,dtype=self.f_64)
         # LOGGING
@@ -198,70 +204,32 @@ class ExecuteJob:
     def euclidean_caller(self,A):
         return euclidean_distance(A,self.B)
 
-    @tf.function
-    def full_run(self):
-        self.closest_movies = {  movieId        :   {'movie' : 0, 'distance' : 10000.0} for movieId in self.liked_movies }
+    def euclidean_caller_noF(self,A):
+        return euclidean_distance_noF(A,self.B)
 
-        self.movie_distances = { movieId      :   None for movieId in self.liked_movies}
-
-
-        t1 = time()
-        for id in self.liked_movies:
-            self.B = slice_row(self.matrix,id-1)
-
-            distances = tf.map_fn(                  self.euclidean_caller,
-                                                    self.matrix)
-
-            dist, index = tf.math.top_k(distances,k=11)
-            ordered = tf.stack( [tf.cast(dist,self.f_16),tf.cast(index,self.f_16)],    axis = 1)
-
-            self.movie_distances[id] = ordered
-
-        printc(f"Ran after {(time()-t1):.3f} seconds",GREEN)
-        pprint.pp(self.movie_distances)
-
-
-    @tf.function
-    def run(self,id):
+    def run(self,id,mapping_func=tf.map_fn):
         self.B = slice_row(self.matrix,id-1)
 
-        distances = tf.map_fn(                  self.euclidean_caller,
+        distances = mapping_func(               self.euclidean_caller,
                                                 self.matrix)
 
         dist, index = tf.math.top_k(distances,k=11)
-        ordered = tf.stack( [tf.cast(dist,self.f_16),tf.cast(index,self.f_16)],    axis = 1)
+        ordered = tf.stack( [tf.cast(dist,self.f_64),tf.cast(index,self.f_64)],    axis = 1)
 
         return ordered
 
-    def TA_implementation(self):
-        #self.closest_movies = {  movieId        :   {'movie' : 0, 'distance' : 10000.0} for movieId in self.liked_movies }
 
-        movie_distances = tf.transpose(tf.constant([[0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0]]))
-
-        i = tf.Variable(0)
-
-        for id in self.liked_movies:
-            self.B      = slice_row(self.matrix,id-1)
-
-            distances   = tf.map_fn(                self.euclidean_caller,
-                                                    self.matrix)
-            dist, index = tf.math.top_k(distances,k=11)
-
-            ordered     = tf.constant(tf.stack([tf.cast(dist,self.f_16),tf.cast(index,self.f_16)],    axis = 1))
-
-            tf.stack(movie_distances, ordered)
-
-        return movie_distances
-
-def inner():
-    movies = [122906,96588,179819,175303,168326,177615,6539,79091,161644,115149,60397,192283,177593,8961]
+def inner(func=tf.map_fn):
+    printc(f"using {func}",RED)
+    t1 = time()
+    movies = [8376, 96821, 112852,1197]
     job = ExecuteJob(movies)
 
     job.prepare_data()
 
     job.read_data()
 
-    job.create_reduced_dense_matrix(10)
+    job.create_reduced_dense_matrix(2000,filename='SVD_DECOMP2000.npy')
 
     job.closest_movies = {  movieId        :   {'movie' : 0, 'distance' : 10000.0} for movieId in job.liked_movies }
 
@@ -269,40 +237,34 @@ def inner():
 
     for id in job.liked_movies:
         t1 = time()
-        job.movie_distances[id] = job.run(id)
+        job.movie_distances[id] = job.run(id,mapping_func=func)
         printc(f"job {id} ran after {(time()-t1):.3f} seconds",GREEN)
 
     pprint.pp(job.movie_distances)
+    return job.movie_distances, time()-t1
 
 
-def outer():
-    movies = [122906,96588,179819,175303,168326,177615,6539,79091,161644,115149,60397,192283,177593,8961]
-    job = ExecuteJob(movies)
-
-    job.prepare_data()
-
-    job.read_data()
-
-    job.create_reduced_dense_matrix(10)
-
-    job.closest_movies = {  movieId        :   {'movie' : 0, 'distance' : 10000.0} for movieId in job.liked_movies }
-    job.movie_distances = { movieId      :   None for movieId in job.liked_movies}
-
-
-    job.full_run()
-
-def impl():
-    movies = [122906,96588,179819,175303,168326,177615,6539,79091,161644,115149,60397,192283,177593,8961]
-    job = ExecuteJob(movies)
+def one_slice(func=tf.map_fn):
+    t1 = time()
+    job = ExecuteJob([122906])
 
     job.prepare_data()
 
     job.read_data()
 
     job.create_reduced_dense_matrix(10)
-    a = job.TA_implementation()
-    return a
+
+
+    t1 = time()
+    id = 122906
+    a =  job.run(id,mapping_func=func)
+    printc(f"job {122906} ran after {(time()-t1):.3f} seconds",GREEN)
+
+    return None, time()-t1
 
 
 if __name__ == "__main__":
-    inner()
+    a1,t1       = inner(func=tf.vectorized_map)
+
+    with open('outputIMPL','w') as file:
+        file.write(pprint.pformat(a1))
