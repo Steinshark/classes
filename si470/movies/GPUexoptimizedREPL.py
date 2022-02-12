@@ -18,6 +18,7 @@ from Toolchain.terminal import *
 from Toolchain.gputools import *
 # Make err handling nicer
 printc(f"Num GPUs Available: {len(tf.config.list_physical_devices('GPU'))}\n",GREEN)
+#tf.config.run_functions_eagerly(True)
 import signal
 def handler(signum, frame):
     res = input(f"{RED}Ctrl-c was pressed. Do you really want to exit? y/n{END}")
@@ -41,6 +42,7 @@ class ExecuteJob:
         self.liked_movie_by_arr_index   = map(lambda x : x - 1, liked_movies)
 
         # Type definitions
+        self.f_16 = tf.dtypes.float16
         self.f_64 = tf.dtypes.float64
         self.i_32 = tf.dtypes.int32
         self.i_64 = tf.dtypes.int64
@@ -197,24 +199,61 @@ class ExecuteJob:
         return euclidean_distance(A,self.B)
 
     @tf.function
-    def run(self):
-        t1 = time()
+    def full_run(self):
         self.closest_movies = {  movieId        :   {'movie' : 0, 'distance' : 10000.0} for movieId in self.liked_movies }
 
         self.movie_distances = { movieId      :   None for movieId in self.liked_movies}
 
+
+        t1 = time()
         for id in self.liked_movies:
-            self.B = slice_row_sparse(self.matrix,id-1)
+            self.B = slice_row(self.matrix,id-1)
 
-            dists,index = tf.map_fn(   self.euclidean_caller,
+            distances = tf.map_fn(                  self.euclidean_caller,
                                                     self.matrix)
-            self.movie_distances[id] = {i : d for i,d in zip(index,dists)}
 
-        pp(self.movie_distances)
-        printc(f"FINISHED IN {time()-t1} seconds",GREEN)
-        input()
+            dist, index = tf.math.top_k(distances,k=11)
+            ordered = tf.stack( [tf.cast(dist,self.f_16),tf.cast(index,self.f_16)],    axis = 1)
 
-if __name__ == "__main__":
+            self.movie_distances[id] = ordered
+
+        printc(f"Ran after {(time()-t1):.3f} seconds",GREEN)
+        pprint.pp(self.movie_distances)
+
+
+    @tf.function
+    def run(self,id):
+        self.B = slice_row(self.matrix,id-1)
+
+        distances = tf.map_fn(                  self.euclidean_caller,
+                                                self.matrix)
+
+        dist, index = tf.math.top_k(distances,k=11)
+        ordered = tf.stack( [tf.cast(dist,self.f_16),tf.cast(index,self.f_16)],    axis = 1)
+
+        return ordered
+
+    def TA_implementation(self):
+        #self.closest_movies = {  movieId        :   {'movie' : 0, 'distance' : 10000.0} for movieId in self.liked_movies }
+
+        movie_distances = tf.transpose(tf.constant([[0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0]]))
+
+        i = tf.Variable(0)
+
+        for id in self.liked_movies:
+            self.B      = slice_row(self.matrix,id-1)
+
+            distances   = tf.map_fn(                self.euclidean_caller,
+                                                    self.matrix)
+            dist, index = tf.math.top_k(distances,k=11)
+
+            ordered     = tf.constant(tf.stack([tf.cast(dist,self.f_16),tf.cast(index,self.f_16)],    axis = 1))
+
+            tf.stack(movie_distances, ordered)
+
+        return movie_distances
+
+def inner():
     movies = [122906,96588,179819,175303,168326,177615,6539,79091,161644,115149,60397,192283,177593,8961]
     job = ExecuteJob(movies)
 
@@ -224,4 +263,46 @@ if __name__ == "__main__":
 
     job.create_reduced_dense_matrix(10)
 
-    job.run()
+    job.closest_movies = {  movieId        :   {'movie' : 0, 'distance' : 10000.0} for movieId in job.liked_movies }
+
+    job.movie_distances = { movieId      :   None for movieId in job.liked_movies}
+
+    for id in job.liked_movies:
+        t1 = time()
+        job.movie_distances[id] = job.run(id)
+        printc(f"job {id} ran after {(time()-t1):.3f} seconds",GREEN)
+
+    pprint.pp(job.movie_distances)
+
+
+def outer():
+    movies = [122906,96588,179819,175303,168326,177615,6539,79091,161644,115149,60397,192283,177593,8961]
+    job = ExecuteJob(movies)
+
+    job.prepare_data()
+
+    job.read_data()
+
+    job.create_reduced_dense_matrix(10)
+
+    job.closest_movies = {  movieId        :   {'movie' : 0, 'distance' : 10000.0} for movieId in job.liked_movies }
+    job.movie_distances = { movieId      :   None for movieId in job.liked_movies}
+
+
+    job.full_run()
+
+def impl():
+    movies = [122906,96588,179819,175303,168326,177615,6539,79091,161644,115149,60397,192283,177593,8961]
+    job = ExecuteJob(movies)
+
+    job.prepare_data()
+
+    job.read_data()
+
+    job.create_reduced_dense_matrix(10)
+    a = job.TA_implementation()
+    return a
+
+
+if __name__ == "__main__":
+    inner()
