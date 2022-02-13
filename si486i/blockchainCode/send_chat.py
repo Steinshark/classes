@@ -78,7 +78,6 @@ class Node:
 
         printc(f"longest chain is len: {self.peer_nodes[self.top_peer]['length']} on host {self.top_peer}",BLUE)
 
-
     def update_peers(self):
         for peer in self.peers:
 
@@ -114,7 +113,7 @@ if __name__ == "__main__":
             n = Node()
             send_chat(input("msg: "), "fox", 5002)
             n.update_peers()
-    except ValueError:
+    except IndexError:
         msg = input("msg: ")
         host = input("host: ")
         port = 5002
