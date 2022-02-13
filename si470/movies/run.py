@@ -299,4 +299,9 @@ def build_svd():
         job.create_reduced_dense_matrix(n,filename='')
 
 if __name__ == "__main__":
-    build_svd()
+    runType = input("Run full analysis[y/n]: ")
+
+    if 'y' in runType or 'Y' in runType:
+        full()
+    else:
+        build_svd()
