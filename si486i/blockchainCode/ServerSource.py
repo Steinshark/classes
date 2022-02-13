@@ -229,6 +229,12 @@ class DynamicServer:
     def scan_chains(self):
         printc(f"\tScanning for local chains",BLUE)
 
+        if not isdir('cache'):
+            mkdir('cache')
+        if not isfile('cache/current.json'):
+            with open("cache/current.json", 'w') as file:
+                file.write("{'head' : '', 'length' : 0}")
+             
         # Set inits
         possible_hashes = grab_cached_hashes()
         hashes_to_prev_hash = {}

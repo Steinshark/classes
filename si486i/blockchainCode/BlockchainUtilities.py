@@ -50,7 +50,7 @@ def get_blockchain(hostname='cat',port='5000',caching=False,cache_location='cach
     while not block_hash== '':
         index += 1
         # First check if this block has been verified
-        if block_hash== last_verified:
+        if block_hash == last_verified:
             trust = True
 
         # check if this block exists in cache
