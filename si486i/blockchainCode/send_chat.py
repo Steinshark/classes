@@ -106,6 +106,7 @@ if __name__ == "__main__":
     try:
         if sys.argv[1] == 'c':
             n = Node()
+            send_chat(input("msg: "), "fox", 5002)
     except:
         msg = input("msg: ")
         host = input("host: ")
