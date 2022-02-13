@@ -175,9 +175,7 @@ class DynamicServer:
             printc(f"\twhile head is {self.head_hash}",TAN)
             printc(f"\trecieved '{str(received_data)[:35]} ... {str(received_data)[-20:]}'",TAN)
 
-################################################################################
-#                    Check if the message is decodable at all
-
+            # Check if the message is decodable at all
             try:
                 block = JSON_to_block(received_data['block'])
                 printc(f"\tdecoded to '{str(block)[:35]} ... {str(block)[-20:]}'",TAN)
@@ -186,22 +184,25 @@ class DynamicServer:
                 printc(f"\terror decoding sent block",RED)
                 return "bad decoding", 418
 
-################################################################################
-#                    Check if the block fields are OK
+            # Check if the block fields are OK
             print(block['prev_hash'])
             print(self.head_hash)
             print(f"equals head? -> {block['prev_hash'] == self.head_hash}")
 
+            # Check if the block checks out as valid
             if not check_fields(block,allowed_versions = [0],allowed_hashes=['']+grab_cached_hashes()):
                 printc(f"\trejected block",RED)
                 printc('\n\n\n',TAN)
                 return "bad block", 418
 
+            # Check if the block checks out as valid
             else:
                 block_write_format = dumps(block)
                 with open(f'cache/{hash(block_write_format.encode())}.json','w') as file:
                     file.write(block_write_format)
+
                 printc(f"\taccepted block",GREEN)
+
                 self.update_chains(block)
                 print(self.all_chains)
                 print('\n\n\n')
@@ -290,29 +291,32 @@ class DynamicServer:
 
         # This case we are adding to an existing chain
         if block['prev_hash'] in self.all_chains:
+            printc(f"pushed block in chain",TAN)
             # Get old chain length
             prev_len = self.all_chains[block['prev_hash']]
 
             # Update the chain to have new head
             del(self.all_chains[block['prev_hash']])
             self.all_chains[block_hash] = prev_len + 1
-
+            printc(f"updated {block['prev_hash'][:10]} chain, now len {prev_len + 1}",RED)
             # If this makes a new longest chain, update file
             if self.all_chains[block_hash] > self.longest_chain:
                 self.head_hash = block_hash
-                self.longest_chain += 1
+                self.longest_chain = self.all_chains[block_hash]
                 self.empty = False
                 self.write_current()
 
         # This case we are creating a chain
         else:
+            printc(f"pushed block not part of chain",TAN)
+
             # Make new chain
             self.all_chains[block_hash] = 1
 
             # Check if its the longest (Aka first block)
             if self.all_chains[block_hash] > self.longest_chain:
                 self.head_hash = block_hash
-                self.longest_chain += 1
+                self.longest_chain = self.all_chains[block_hash]
                 self.empty = False
                 self.write_current()
 
