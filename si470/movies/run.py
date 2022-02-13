@@ -40,7 +40,6 @@ class ExecuteJob:
 
         # This will be used to find predictions THEY ARE ALREADY SHIFTED
         self.liked_movies               = liked_movies
-        self.liked_movie_by_arr_index   = map(lambda x : x - 1, liked_movies)
 
         # Type definitions
         self.f_16 = tf.dtypes.float16
@@ -94,11 +93,29 @@ class ExecuteJob:
             self.usna[col].fillna(value = 0, inplace = True)
 
         # Some helpful constants                                  dataset                             column                index
-        self.n_movies                            = int(         self.dataframes['large']['movies']     ['movieId'].iloc    [-1]        )
+        self.n_movies                            = int( len(    self.dataframes['large']['movies']     ['movieId']                     ))
         self.n_users                             = int(         self.ratings                           ['userId'].iloc     [-1]        )
+
+        # Fix the mapping of movieId to col in matrix
+        self.movieId_to_col = {}
+        self.movieId_to_name = {}
+        self.col_to_movieId = {}
+        i = 0
+        with open(self.datasets['large']['movies'],'r',encoding='utf-8') as file:
+            file.readline()
+            for line in file:
+                movieID = int(line.split(',')[0])
+                movieName = line.split(',')[1]
+                self.movieId_to_col[movieID] = i
+                self.movieId_to_name[movieID] = movieName
+                self.col_to_movieId[i] = movieID
+                i += 1
+
+        self.liked_movies = list(map(lambda x : self.movieId_to_col[x], self.liked_movies))
 
         # Done with data read!
         printc(f"Read Data in {(time()-t1):.3f} seconds",GREEN)
+        printc(f"Expecting to build matrix size ({self.n_movies},{self.n_users})",TAN)
 
     def show_data(self):
         printc(f"\n\nDATASET: ",BLUE)
@@ -120,7 +137,7 @@ class ExecuteJob:
         t1 = time()
 
         # Set x,y index arrays and build index tensor (n_movies,x)
-        matrix_x        = tf.convert_to_tensor(self.ratings['userId'].apply(lambda x : x - 1),  dtype=self.i_64)
+        matrix_x        = tf.convert_to_tensor(self.ratings['userId'].apply(lambda x : self.movieId_to_col(x)),  dtype=self.i_64)
         matrix_y        = tf.convert_to_tensor(self.ratings['movieId'].apply(lambda x : x - 1), dtype=self.i_64)
         self.indices    = tf.stack( [matrix_y,matrix_x],    axis = 1)
         # Build value tensor
@@ -153,12 +170,14 @@ class ExecuteJob:
 
         if not importing:
     # Build sparse matrix
-            rows = self.ratings['movieId'] - 1
-            cols =  self.ratings['userId'] - 1
+            fname = f"SVD_DECOMP{n}.npy"
+            rows = self.ratings['movieId'].apply(lambda x : self.movieId_to_col[x])
+            cols =  self.ratings['userId']-1
 
             matrix_sparse = scipy.sparse.coo_matrix((self.ratings['rating'],(rows,cols)),shape=[self.n_movies,self.n_users])
             # LOGGING
             t2 = time()
+
             printc(f"\tcreated sparse in {RED}{(t2-t1):.3f}{TAN} seconds",TAN)
 
     # Reshape with TSV
@@ -166,6 +185,7 @@ class ExecuteJob:
             dense_reduced = tsvd.fit_transform(matrix_sparse)
             #LOGGING
             t3 = time()
+            np.save(fname,dense_reduced)
             printc(f"\tcreated svd in {RED}{(t3-t2):.3f}{TAN} seconds",TAN)
         else:
             printc(f"\timporting reduced from: {filename}",TAN)
@@ -208,19 +228,27 @@ class ExecuteJob:
         return euclidean_distance_noF(A,self.B)
 
     def run(self,id,mapping_func=tf.map_fn):
-        self.B = slice_row(self.matrix,id-1)
+        print(f"running {id}")
+        self.B = slice_row(self.matrix,id)
 
         distances = mapping_func(               self.euclidean_caller,
                                                 self.matrix)
 
         dist, index = tf.math.top_k(distances,k=11)
-        ordered = tf.stack( [tf.cast(dist,self.f_64),tf.cast(index,self.f_64)],    axis = 1)
+        dist = tf.math.reciprocal(dist)
+        ordered = tf.stack( [tf.cast(index,self.i_32),tf.cast(dist,self.i_32)],    axis = 1)
 
         return ordered
 
 
-def inner(func=tf.map_fn):
+# Will return a dictionary of suggested movies and time to calc
+def full(func=tf.map_fn):
     printc(f"using {func}",RED)
+    fname = input("SVD filename: ")
+
+    if fname == '':
+        n = int(input("reduce to size: "))
+
     t1 = time()
     movies = [8376, 96821, 112852,1197]
     job = ExecuteJob(movies)
@@ -229,42 +257,47 @@ def inner(func=tf.map_fn):
 
     job.read_data()
 
-    job.create_reduced_dense_matrix(2000,filename='SVD_DECOMP2000.npy')
+
+    job.create_reduced_dense_matrix(n,filename=fname)
 
     job.closest_movies = {  movieId        :   {'movie' : 0, 'distance' : 10000.0} for movieId in job.liked_movies }
 
+
     job.movie_distances = { movieId      :   None for movieId in job.liked_movies}
 
-    for id in job.liked_movies:
+
+
+    for id in job.closest_movies:
         t1 = time()
         job.movie_distances[id] = job.run(id,mapping_func=func)
         printc(f"job {id} ran after {(time()-t1):.3f} seconds",GREEN)
 
+    for movie in job.movie_distances:
+        np_array = job.movie_distances[movie].numpy()
+        mov_dist = {}
+        for close_movie in np_array:
+            movieId = job.col_to_movieId[close_movie[0]]
+            movieName = job.movieId_to_name[movieId]
+            mov_dist[movieName] = close_movie[1]
+
+        job.movie_distances[movie] = mov_dist
+
+
     pprint.pp(job.movie_distances)
     return job.movie_distances, time()-t1
 
+# Will reduce the dataset to n dimensions
+def build_svd():
+        n = int(input(f"{TAN}reduce to size: {END}"))
+        movies = []
+        job = ExecuteJob(movies)
 
-def one_slice(func=tf.map_fn):
-    t1 = time()
-    job = ExecuteJob([122906])
+        job.prepare_data()
 
-    job.prepare_data()
-
-    job.read_data()
-
-    job.create_reduced_dense_matrix(10)
+        job.read_data()
 
 
-    t1 = time()
-    id = 122906
-    a =  job.run(id,mapping_func=func)
-    printc(f"job {122906} ran after {(time()-t1):.3f} seconds",GREEN)
-
-    return None, time()-t1
-
+        job.create_reduced_dense_matrix(n,filename='')
 
 if __name__ == "__main__":
-    a1,t1       = inner(func=tf.vectorized_map)
-
-    with open('outputIMPL','w') as file:
-        file.write(pprint.pformat(a1))
+    build_svd()
