@@ -247,13 +247,17 @@ class DynamicServer:
                     printc(f"\t\thash {hash[:20]}... maps to {prev_hash[:20]}..",TAN)
 
 
+        # Remove non-head hashes
         for not_possible_end_hash in hashes_to_prev_hash.values():
             try:
                 possible_hashes.remove(not_possible_end_hash)
             except ValueError:
                 printc(f"\t\ttried to remove {not_possible_end_hash[:10]} from list",RED)
+
         longest = 0
         l_hash = None
+
+        # Find longest chain
         for hash in possible_hashes:
             hash_len[hash] = iter_local_chain(hash)
             if hash_len[hash] > longest:
@@ -263,12 +267,13 @@ class DynamicServer:
         printc(f"\t\tLongest chain: {longest} block",TAN)
 
         self.empty = not possible_hashes
-        if not self.empty:
+        if self.empty:
+            print("were empty")
+        else:
             self.longest_chain = longest
             self.head_hash = l_hash
             self.write_current()
-        else:
-            printc(f"\t\tServer INITed as EMPTY",RED)
+
 
         with open('cache/current.json') as file :
             flock(file,LOCK_SH)
