@@ -9,3 +9,5 @@ newData*
 *.docword.nytimes.txt
 */data/*
 *storage*
+*ml-latest*
+*cache/*
