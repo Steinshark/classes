@@ -7,6 +7,7 @@ import sys
 from time import time
 import pprint
 from sklearn.decomposition import TruncatedSVD
+from matplotlib import pyplot as plt
 import scipy
 # Package import to work on windows and linux
 sys.path.append("C:\classes")
