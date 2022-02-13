@@ -111,4 +111,4 @@ if __name__ == "__main__":
         msg = input("msg: ")
         host = input("host: ")
         port = 5002
-        send_chat(msg,host,port)
+        self.update_peers()
