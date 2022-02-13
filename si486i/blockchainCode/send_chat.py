@@ -3,7 +3,7 @@ from BlockchainErrors import *
 from json import dumps
 from show_chat import FetchService
 from requests import get
-from requests.exceptions import ConnectionError
+from requests.exceptions import ConnectionError, ReadTimeout
 import sys
 # Package import to work on windows and linux
 try:
@@ -43,6 +43,12 @@ class Node:
 
             except ConnectionRefusedError:
                 printc(f"\tError in get request on host {host} - refused\n\n",RED)
+                continue
+            except ReadTimeout:
+                printc(f"\tError in get request on host {host} - timeout\n\n",RED)
+                continue
+            except:
+                printc(f"\tError in get request on host {host} - unknown reason\n\n",RED)
                 continue
 
             # Attempt to fetch the blockchain of that node
