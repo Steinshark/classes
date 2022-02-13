@@ -107,6 +107,7 @@ if __name__ == "__main__":
         if sys.argv[1] == 'c':
             n = Node()
             send_chat(input("msg: "), "fox", 5002)
+            self.update_peers()
     except:
         msg = input("msg: ")
         host = input("host: ")
