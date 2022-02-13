@@ -157,7 +157,7 @@ class DynamicServer:
                     flock(file,LOCK_SH)
                     block = file.read()
                     flock(file,LOCK_UN)
-                    return "OK", 200
+                    return block, 200
 
 
 
