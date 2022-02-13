@@ -126,6 +126,7 @@ class DynamicServer:
                 info = loads(file.read())
                 self.longest_chain = info['length']
                 self.head_hash = info['head']
+                printc(f"I think the head is at {self.head_hash[:10]} of {self.longest_chain}",RED)
                 flock(file,LOCK_UN)
 
             # Can't imagine how this would not return 200
