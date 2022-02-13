@@ -104,7 +104,9 @@ class ExecuteJob:
         with open(self.datasets['large']['movies'],'r',encoding='utf-8') as file:
             file.readline()
             for line in file:
+                movieID = int(line.split(',')[0])
                 self.movieId_to_col[int(line.split(',')[0]) - 1] = i
+                self.movieId_to_name
                 i += 1
         pprint.pp(self.movieId_to_col)
         input()
@@ -132,7 +134,7 @@ class ExecuteJob:
         t1 = time()
 
         # Set x,y index arrays and build index tensor (n_movies,x)
-        matrix_x        = tf.convert_to_tensor(self.ratings['userId'].apply(lambda x : x - 1),  dtype=self.i_64)
+        matrix_x        = tf.convert_to_tensor(self.ratings['userId'].apply(lambda x : self.movieId_to_col(x)),  dtype=self.i_64)
         matrix_y        = tf.convert_to_tensor(self.ratings['movieId'].apply(lambda x : x - 1), dtype=self.i_64)
         self.indices    = tf.stack( [matrix_y,matrix_x],    axis = 1)
         # Build value tensor
