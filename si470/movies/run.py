@@ -242,14 +242,16 @@ class ExecuteJob:
                                                 self.matrix)
 
         dist, index = tf.math.top_k(distances,k=11)
+
         dist = tf.math.reciprocal(dist)
+
         ordered = tf.stack( [tf.cast(index,self.i_32),tf.cast(dist,self.i_32)],    axis = 1)
 
         return ordered
 
 
 # Will return a dictionary of suggested movies and time to calc
-def full(func=tf.map_fn):
+def full(func=tf.vectorized_map):
     printc(f"using {func}",RED)
     fname = input("SVD filename: ")
     n = 1
