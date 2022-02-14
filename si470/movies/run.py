@@ -20,6 +20,8 @@ sys.stderr = sys.stdout
 
 from Toolchain.terminal import *
 from Toolchain.gputools import *
+
+
 # Make err handling nicer
 printc(f"Num GPUs Available: {len(tf.config.list_physical_devices('GPU'))}\n",GREEN)
 #tf.config.run_functions_eagerly(True)
@@ -29,6 +31,8 @@ def handler(signum, frame):
     if res == 'y':
         exit(1)
 signal.signal(signal.SIGINT, handler)
+
+
 # Init
 load_from = {'newData' : "newData.csv", "full" : join("ml-latest","ratings.csv")}
 
@@ -307,6 +311,6 @@ if __name__ == "__main__":
     runType = input("Run full analysis[y/n]: ")
 
     if 'y' in runType or 'Y' in runType:
-        full()
+        full(func=tf.vectorized_map)
     else:
         build_svd()
