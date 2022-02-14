@@ -8,12 +8,16 @@ from time import time
 import pprint
 from sklearn.decomposition import TruncatedSVD
 import scipy
+
 # Package import to work on windows and linux
 sys.path.append("C:\classes")
 sys.path.append("D:\classes")
 sys.path.append("/mnt/d/classes")
+sys.path.append("/home/mids/m226252/classes")
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 sys.stderr = sys.stdout
+
 from Toolchain.terminal import *
 from Toolchain.gputools import *
 # Make err handling nicer
@@ -244,12 +248,13 @@ class ExecuteJob:
 def full(func=tf.map_fn):
     printc(f"using {func}",RED)
     fname = input("SVD filename: ")
-
+    n = 1
     if fname == '':
         n = int(input("reduce to size: "))
 
+
     t1 = time()
-    movies = [8376, 96821, 112852,1197]
+    movies = [122906]
     job = ExecuteJob(movies)
 
     job.prepare_data()
