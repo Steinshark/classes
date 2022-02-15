@@ -25,7 +25,6 @@ import pytest
 
 import numpy as np
 import tensorflow as tf
-import tensorflow.contrib.eager as tfe
 
 from tensorflow import (
     constant as C_,
