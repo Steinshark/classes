@@ -31,7 +31,7 @@ from tensorflow import (
     constant as C_,
     #Variable as V_,
 )
-V_ = tfe.Variable
+V_ = tf.Variable
 from tensorflow.bitwise import (
     bitwise_and as and_,
     bitwise_or as or_,
