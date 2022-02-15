@@ -193,7 +193,6 @@ def sha256(msg):
     Return the SHA-256 hex digest of byte string `msg`.
     """
     np.seterr(over='ignore')
-    tf.enable_eager_execution()
 
     # Pre-processing (Padding):
     m = prepare(msg)
