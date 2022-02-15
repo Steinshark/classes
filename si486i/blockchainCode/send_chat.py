@@ -168,29 +168,32 @@ class Node:
 
             self.update_peer_node_iterative(peer,full_blockchain,stack,True)
 
-        # Iteratively try to push each block in the blockchain
-        for (hash,block) in full_blockchain:
 
-            # Create the payload
-            payload = {'block' : block_to_JSON(block)}
+   # NEED TO FIX 
+        else:
+            # Iteratively try to push each block in the blockchain
+            for (hash,block) in full_blockchain:
 
-            # Attempt to give it to the peer
-            try:
-                return_code = http_post(peer, 5002, payload)
+                # Create the payload
+                payload = {'block' : block_to_JSON(block)}
 
-            # If their server isn't up, then forget it
-            except ConnectionException:
-                break
+                # Attempt to give it to the peer
+                try:
+                    return_code = http_post(peer, 5002, payload)
 
-            # If this block worked, head back up the stack
-            # (this is super inefficient I realize, but I
-            # dont have the time to rewrite)
-            if return_code.status_code == 200:
-                self.update_peer_node_iterative(peer,stack)
-                printc(f"Block accepted! Trying next block in current chain",GREEN)
-            else:
-                printc(f"{hash[:5]}->{return_code},  ",TAN,endl='')
-                continue
+                # If their server isn't up, then forget it
+                except ConnectionException:
+                    break
+
+                # If this block worked, head back up the stack
+                # (this is super inefficient I realize, but I
+                # dont have the time to rewrite)
+                if return_code.status_code == 200:
+                    self.update_peer_node_iterative(peer,stack)
+                    printc(f"Block accepted! Trying next block in current chain",GREEN)
+                else:
+                    printc(f"{hash[:5]}->{return_code},  ",TAN,endl='')
+                    continue
 
         printc(f"Finished trying to push chain",TAN)
 
