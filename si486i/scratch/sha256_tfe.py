@@ -65,6 +65,7 @@ def prepare(m):
     (Assumes that a byte is 8 bits wide, which should be true for
     basically any hardware that Python runs on.)
     """
+    input(type(m))
     assert type(m) is bytes
     # begin with the original message of length L bits
     L = len(m) * 8
@@ -193,7 +194,6 @@ def sha256(msg):
     Return the SHA-256 hex digest of byte string `msg`.
     """
     np.seterr(over='ignore')
-
     # Pre-processing (Padding):
     m = prepare(msg)
 
