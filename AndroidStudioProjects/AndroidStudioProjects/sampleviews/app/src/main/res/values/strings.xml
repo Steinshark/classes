@@ -1,0 +1,9 @@
+<resources>
+
+    <string name="app_name">sampleviews</string>
+    <string name="hello_text">Hello World!!!!!!</string>
+    <string name="hello_text2">Hello WOrld part 2</string>
+    <string name="hello_string"> Hello Again </string>
+    <string name="button_text">Press me</string>
+    <string name="hint">PIN</string>
+</resources>

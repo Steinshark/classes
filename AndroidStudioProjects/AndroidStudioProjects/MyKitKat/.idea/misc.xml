@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DesignSurface">
+    <option name="filePathToZoomLevelMap">
+      <map>
+        <entry key="..\:/classes/AndroidStudioProjects/AndroidStudioProjects/MyKitKat/app/src/main/res/drawable/buttonround.xml" value="0.1" />
+        <entry key="..\:/classes/AndroidStudioProjects/AndroidStudioProjects/MyKitKat/app/src/main/res/layout-land/activity_main.xml" value="0.4691358024691358" />
+        <entry key="..\:/classes/AndroidStudioProjects/AndroidStudioProjects/MyKitKat/app/src/main/res/layout/activity_main.xml" value="0.4533333333333333" />
+        <entry key="..\:/classes/AndroidStudioProjects/AndroidStudioProjects/MyKitKat/app/src/main/res/layout/activity_main_save.xml" value="0.24139492753623187" />
+        <entry key="app/src/main/res/layout-land/activity_main.xml" value="0.29365079365079366" />
+        <entry key="app/src/main/res/layout/activity_main.xml" value="0.29257246376811596" />
+      </map>
+    </option>
+  </component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="Android Studio default JDK" project-jdk-type="JavaSDK">
+    <output url="file://$PROJECT_DIR$/build/classes" />
+  </component>
+  <component name="ProjectType">
+    <option name="id" value="Android" />
+  </component>
+</project>

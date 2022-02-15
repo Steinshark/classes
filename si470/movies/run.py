@@ -8,14 +8,20 @@ from time import time
 import pprint
 from sklearn.decomposition import TruncatedSVD
 import scipy
+
 # Package import to work on windows and linux
 sys.path.append("C:\classes")
 sys.path.append("D:\classes")
 sys.path.append("/mnt/d/classes")
+sys.path.append("/home/mids/m226252/classes")
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 sys.stderr = sys.stdout
+
 from Toolchain.terminal import *
 from Toolchain.gputools import *
+
+
 # Make err handling nicer
 printc(f"Num GPUs Available: {len(tf.config.list_physical_devices('GPU'))}\n",GREEN)
 #tf.config.run_functions_eagerly(True)
@@ -25,6 +31,8 @@ def handler(signum, frame):
     if res == 'y':
         exit(1)
 signal.signal(signal.SIGINT, handler)
+
+
 # Init
 load_from = {'newData' : "newData.csv", "full" : join("ml-latest","ratings.csv")}
 
@@ -234,22 +242,25 @@ class ExecuteJob:
                                                 self.matrix)
 
         dist, index = tf.math.top_k(distances,k=11)
+
         dist = tf.math.reciprocal(dist)
+
         ordered = tf.stack( [tf.cast(index,self.i_32),tf.cast(dist,self.i_32)],    axis = 1)
 
         return ordered
 
 
 # Will return a dictionary of suggested movies and time to calc
-def full(func=tf.map_fn):
+def full(func=tf.vectorized_map):
     printc(f"using {func}",RED)
     fname = input("SVD filename: ")
-
+    n = 1
     if fname == '':
         n = int(input("reduce to size: "))
 
+
     t1 = time()
-    movies = [8376, 96821, 112852,1197]
+    movies = [122906]
     job = ExecuteJob(movies)
 
     job.prepare_data()
@@ -302,6 +313,6 @@ if __name__ == "__main__":
     runType = input("Run full analysis[y/n]: ")
 
     if 'y' in runType or 'Y' in runType:
-        full()
+        full(func=tf.vectorized_map)
     else:
         build_svd()
