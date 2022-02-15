@@ -165,8 +165,8 @@ class Node:
 
             if not stack:
                 return
-                
-            self.update_peer_node_iterative(peer,full_blockchain,stack[1:],True)
+
+            self.update_peer_node_iterative(peer,full_blockchain,stack,True)
 
         # Iteratively try to push each block in the blockchain
         for (hash,block) in full_blockchain:
