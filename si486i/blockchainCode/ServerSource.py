@@ -8,6 +8,7 @@ from json import dumps, loads
 from os import listdir, mkdir
 import argparse
 import sys
+from pprint import pp
 
 # Package import to work on windows and linux
 # Allows for nice text writing
@@ -273,7 +274,7 @@ class DynamicServer:
 ################################################################################
 
     def update_chains(self,block):
-        print(self.all_chains)
+        pp(self.all_chains)
         block_hash = hash(dumps(block).encode())
         prev_hash = block['prev_hash']
 
