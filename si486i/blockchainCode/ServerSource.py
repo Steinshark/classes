@@ -250,7 +250,7 @@ class DynamicServer:
 
         # Info
         printc(f"\t\tFound {len(possible_hashes)} chains",TAN)
-        printc(f"\t\tLongest chain: {slef.longest_chain} block",TAN)
+        printc(f"\t\tLongest chain: {self.longest_chain} block",TAN)
 
         self.empty = not possible_hashes
 
