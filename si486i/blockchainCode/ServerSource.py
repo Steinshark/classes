@@ -273,6 +273,7 @@ class DynamicServer:
 ################################################################################
 
     def update_chains(self,block):
+        print(self.all_chains)
         block_hash = hash(dumps(block).encode())
         prev_hash = block['prev_hash']
 
