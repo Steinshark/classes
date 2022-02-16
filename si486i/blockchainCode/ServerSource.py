@@ -8,6 +8,7 @@ from json import dumps, loads
 from os import listdir, mkdir
 import argparse
 import sys
+from pprint import pp
 
 # Package import to work on windows and linux
 # Allows for nice text writing
@@ -53,7 +54,7 @@ class StaticServer:
             if arguments[0] == "add":
                 if arguments[1] == "block":
                     block = arguments[2]
-                    block_hash = hash('hex',block.encode()).hexdigest()
+                    block_hash =sha_256_hash('hex',block.encode()).hexdigest()
                     self.blocks[block_hash] = block
 
             # Allow for block removal
@@ -70,11 +71,11 @@ class StaticServer:
             pass
         elif not self.blocks and gen_block is None:
             block = build_block('',{'chat' : 'my very own blockchain!'},0)
-            block_hash = hash('hex',block.encode())
+            block_hash =sha_256_hash('hex',block.encode())
             self.blocks[block_hash] = block
             print(f"head is now {list(self.blocks.keys())[-1]}")
         else:
-            block_hash = hash('hex',gen_block.encode())
+            block_hash =sha_256_hash('hex',gen_block.encode())
             self.blocks[block_hash] = gen_block
             print(f"head is now {list(self.blocks.keys())[-1]}")
 
@@ -114,6 +115,7 @@ class DynamicServer:
 
         @self.app.route('/head')
         def head():
+            pp(self.all_chains)
 
             # Some simple debug code
             printc(f"\thead requested, sending {self.head_hash[:10]}",TAN)
@@ -189,7 +191,7 @@ class DynamicServer:
 
                 # Back to JSON
                 block_string = dumps(block)
-                block_hash   = hash(block_string.encode())
+                block_hash   =sha_256_hash(block_string.encode())
 
                 # Save file in cache folder
                 with open(f'cache/{block_hash}.json','w') as file:
@@ -224,8 +226,8 @@ class DynamicServer:
         hash_len                = {}                    # maps chains to their length
 
         # Get all hashes found in 'cache' and map them to their prev_hash
-        for hash in grab_cached_hashes():
-                with open(f"cache/{hash}.json",'r') as f:
+        for block_hash in grab_cached_hashes():
+                with open(f"cache/{block_hash}.json",'r') as f:
                     prev_hash = loads(f.read().strip())['prev_hash']
                     hashes_to_prev_hash[hash] = prev_hash
 
@@ -241,13 +243,13 @@ class DynamicServer:
         self.head_hash = ''
 
         # Find the longest chain
-        for hash in possible_hashes:
-            hash_len[hash] = iter_local_chain(hash)     # Runs through and grabs length of chain starting from 'hash'
+        for block_hash in possible_hashes:
+            hash_len[block_hash] = iter_local_chain(block_hash)     # Runs through and grabs length of chain starting from 'hash'
 
             # Update as necessary
             if hash_len[hash] > self.longest_chain:
-                self.longest_chain  = hash_len[hash]
-                self.head_hash      = hash
+                self.longest_chain  = hash_len[block_hash]
+                self.head_hash      = block_hash
 
         # Info
         printc(f"\t\tFound {len(possible_hashes)} chains",TAN)
@@ -273,7 +275,8 @@ class DynamicServer:
 ################################################################################
 
     def update_chains(self,block):
-        block_hash = hash(dumps(block).encode())
+        pp(self.all_chains)
+        block_hash =sha_256_hash(dumps(block).encode())
         prev_hash = block['prev_hash']
 
         # This case we are adding to an existing chain
@@ -425,7 +428,7 @@ class VersionOneServer:
 
                 # Back to JSON
                 block_string = dumps(block)
-                block_hash   = hash(block_string.encode())
+                block_hash   =sha_256_hash(block_string.encode())
                 # Save file in cache folder
                 with open(f'cache/{block_hash}.json','w') as file:
                     file.write(block_string)
@@ -456,10 +459,10 @@ class VersionOneServer:
         hash_len                = {}                    # maps chains to their length
 
         # Get all hashes found in 'cache' and map them to their prev_hash
-        for hash in possible_hashes:
+        for block_hash in possible_hashes:
                 with open(f"cache/{hash}.json",'r') as f:
                     prev_hash = loads(f.read().strip())['prev_hash']
-                    hashes_to_prev_hash[hash] = prev_hash
+                    hashes_to_prev_hash[block_hash] = prev_hash
 
         # From possible_hashes, remove all hashes that appeared as a prev_hash
         # This means that they are not the head of a chain
@@ -473,13 +476,13 @@ class VersionOneServer:
         self.head_hash = ''
 
         # Find the longest chain
-        for hash in possible_hashes:
+        for block_hash in possible_hashes:
             hash_len[hash] = iter_local_chain(hash)     # Runs through and grabs length of chain starting from 'hash'
 
             # Update as necessary
             if hash_len[hash] > self.longest_chain:
                 self.longest_chain  = hash_len[hash]
-                self.head_hash      = hash
+                self.head_hash      = block_hash
 
         # Info
         printc(f"\t\tFound {len(possible_hashes)} chains",TAN)
@@ -503,7 +506,7 @@ class VersionOneServer:
 #                  As server runs, update the current chains
 ################################################################################
     def update_chains(self,block):
-        block_hash = hash(dumps(block).encode())
+        block_hash =sha_256_hash(dumps(block).encode())
         prev_hash = block['prev_hash']
 
         # This case we are adding to an existing chain
@@ -530,7 +533,7 @@ class VersionOneServer:
         else:
 
         # Make new chain
-            self.all_chains[block_hash] = 1
+            self.all_chains[block_hash] = iter_local_chain(block_hash,version=1)
 
         # Check if its the longest (Aka first block)
             if self.all_chains[block_hash] > self.longest_chain:

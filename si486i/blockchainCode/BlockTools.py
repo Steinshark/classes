@@ -2,6 +2,7 @@
 #######################################  IMPORTS  #######################################
 #########################################################################################
 from BlockchainErrors import *
+from BlockchainUtilities import *
 from json import loads, dumps, JSONDecodeError
 from requests import get, post,Timeout, RequestException
 from os.path import isfile, isdir, join
@@ -72,6 +73,10 @@ def build_block(prev_hash,payload,ver):
     new_block = {   'prev_hash'     : prev_hash,
                     'payload'       : payload,
                     'version'       : ver}
+    if ver == 1:
+        new_block['nonce'] = 0
+        new_block = mine_block(new_block)
+
     try:
         encoded_block = dumps(new_block)
         return encoded_block
@@ -84,27 +89,29 @@ def grab_cached_hashes(cache_location='cache',version=0):
 
     for fname in listdir(cache_location):
         fname = fname.strip()
-        hash  = fname.split('.')[0]
+        block_hash  = fname.split('.')[0]
         ext   = fname.split('.')[-1]
 
-        if version == 1 and ext == 'json' and not hash == 'current' and hash[:6] =='000000':
-            allowed_hashes.append(hash)
-        elif version == 0 and ext == 'json' and not hash == 'current':
-            allowed_hashes.append(hash)
+        if version == 1 and ext == 'json' and not block_hash == 'current' and block_hash[:6] =='000000':
+            allowed_hashes.append(block_hash)
+        elif version == 0 and ext == 'json' and not block_hash == 'current':
+            allowed_hashes.append(block_hash)
 
     return allowed_hashes
 
 # find chain length from a hash
-def iter_local_chain(hash):
+def iter_local_chain(block_hash,version=0):
     length = 0
 
-    while not hash == '':
+    while not block_hash == '':
         length += 1
         filename = f"cache/{hash}.json"
         with open(filename,'r') as file:
             block_as_JSON = file.read()
             block = JSON_to_block(block_as_JSON)
-            hash = block['prev_hash']
+            block_hash = block['prev_hash']
+            if version == 1 and not block['verison'] == 1:
+                return length
 
     return length
 
@@ -151,13 +158,13 @@ def check_fields(block,allowed_versions=[0],allowed_hashes=[''],trust=False):
         if (not 'nonce' in block):
             return False
 
-        elif (not hash(loads(block).encode())[:6] == '000000'):
+        elif (not sha_256_hash(loads(block).encode())[:6] == '000000'):
             return False
 
     return True
 
 # Sends a block containing 'msg' to 'host' on 'port'
-def send_chat(msg,host,port):
+def send_chat(msg,host,port,version=0):
     #Specify all the URLs
     URL = { 'head' : f"http://{host}:{port}/head",
             'push' : f"http://{host}:{port}/push"}
@@ -166,7 +173,7 @@ def send_chat(msg,host,port):
     head_hash = get(URL['head']).content.decode()
     print(f"received {head_hash}")
     # Create the block
-    json_encoded_block = build_block(head_hash,{'chat' : msg},0)
+    json_encoded_block = build_block(head_hash,{'chat' : msg},version)
 
     # Build format to send over HTTP
     push_data = {'block' : json_encoded_block}
@@ -182,3 +189,12 @@ def send_chat(msg,host,port):
     except TypeError as t:
         printc(t,RED)
         printc(f"\tRecieved Null response...",TAN)
+
+
+def mine_block(block):
+    block_hash = '111111'
+    while not block_hash[:6] == '000000':
+        block_hash  = sha_256_hash(block_to_JSON(block).encode())
+        block['nonce'] += 1
+    input(f"found block {block}")
+    return block
