@@ -220,4 +220,4 @@ if __name__ == "__main__":
         msg = input("msg: ")
         host = input("host: ")
         port = 5002
-        self.update_peers()
+        n.update_peers()
