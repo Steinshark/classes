@@ -244,7 +244,7 @@ class DynamicServer:
             hash_len[hash] = iter_local_chain(hash)     # Runs through and grabs length of chain starting from 'hash'
 
             # Update as necessary
-            if hash_len[hash] > longest:
+            if hash_len[hash] > self.longest_chain:
                 self.longest_chain  = hash_len[hash]
                 self.head_hash      = hash
 
