@@ -34,18 +34,6 @@ def retrieve_head_hash(host="cat",port="5000",timeout=3):
     except ConnectionError:
         raise ConnectionException(f"{Color.RED}Error: something went wrong connecting to {url}{Color.END}")
 
-
-# Yields a block's 'prev_hash' field, given a block
-def retrieve_prev_hash(block):
-    # Check length requirements - can be 64 or 0 (for genesis block)
-    try:
-        if not len(block['prev_hash']) in [0,64]:
-            raise HashRetrievalException(f"{Color.RED}Error: fetching of '{block['prev_hash'][:70]}'... not a valid hash'{Color.END}")
-    except KeyError:
-        raise HashRetrievalException(f"{Color.RED}Error: fetching of '{str(block)[:70]}...' missing 'prev_hash' key'{Color.END}")
-    return block['prev_hash']
-
-
 # Convert JSON representation of a block to python dictionary representation of a block
 def JSON_to_block(JSON_text):
     try:
@@ -53,11 +41,9 @@ def JSON_to_block(JSON_text):
     except JSONDecodeError:
         raise DecodeException(f"{Color.RED}Error Decoding JSON: '{JSON_text[:50]}' as block{Color.END}")
 
-
 # Convert python dictionary representation of a block to JSON representation of a block
 def block_to_JSON(block):
     return dumps(block)
-
 
 # Takes a hash and makes a request to the given URL to return the block with that hash
 def retrieve_block(hash_decoded,host="cat",port="5000",timeout=3):
@@ -71,7 +57,6 @@ def retrieve_block(hash_decoded,host="cat",port="5000",timeout=3):
     except ConnectionError:
         raise ConnectionException(f"{Color.RED}Error: something went wrong connecting to {url}{Color.END}")
 
-
 # Wrapper function for post
 def http_post(host,port,payload,timeout=2):
     try:
@@ -81,7 +66,6 @@ def http_post(host,port,payload,timeout=2):
         raise ConnectionException(f"{Color.RED}error: timeout requesting response from {url}")
     except RequestException:
         raise ConnectionException(f"{Color.RED}Error: something went wrong connecting to {url}{Color.END}")
-
 
 # builds a block given the three fields and returns as JSON
 def build_block(prev_hash,payload,ver):
@@ -94,85 +78,83 @@ def build_block(prev_hash,payload,ver):
     except JSONEncodeException as j:
         raise BlockCreationException(j)
 
-
 # returns a list of all the allowed hashes
 def grab_cached_hashes(cache_location='cache',version=0):
     allowed_hashes = []
-    if version == 1:
-        for fname in listdir(cache_location):
-            fname = fname.strip()
-            if fname.split('.')[-1] == 'json' and fname.split('.')[0] == 'current' and fname[:6] =='000000':
-                allowed_hashes.append(fname.strip().split(".")[0])
-    else:
-        for fname in listdir(cache_location):
-            fname = fname.strip()
-            if fname.split('.')[-1] == 'json' and fname.split('.')[0] == 'current':
-                allowed_hashes.append(fname.strip().split(".")[0])
+
+    for fname in listdir(cache_location):
+        fname = fname.strip()
+        hash  = fname.split('.')[0]
+        ext   = fname.split('.')[-1]
+
+        if version == 1 and ext == 'json' and not hash == 'current' and hash[:6] =='000000':
+            allowed_hashes.append(hash)
+        elif version == 0 and ext == 'json' and not hash == 'current':
+            allowed_hashes.append(hash)
+
     return allowed_hashes
 
-
+# find chain length from a hash
 def iter_local_chain(hash):
     length = 0
+
     while not hash == '':
         length += 1
-        try:
-            file = f"cache/{hash}.json"
-            hash = loads(open(file).read())['prev_hash']
-        except FileNotFoundError:
-            printc(f"\t\t{file} was not found in cache",RED)
-            return length
-    return length
-#########################################################################################
-########################## FUNCTIONS FOR PROCESSING BLOCKCHAIN ##########################
-#########################################################################################
+        filename = f"cache/{hash}.json"
+        with open(filename,'r') as file:
+            block_as_JSON = file.read()
+            block = JSON_to_block(block_as_JSON)
+            hash = block['prev_hash']
 
+    return length
 
 # given a processed block (python dictionary), check the block for keys, then check
 # key values using the named parameters
 def check_fields(block,allowed_versions=[0],allowed_hashes=[''],trust=False):
     if trust:
         return True
-    # Ensure 'version' field checks out
-    if (not 'version' in block) or\
-       (not block['version'] in allowed_versions):
-        print("bad version")
+
+    if not 'version' in block:
+        print("missing version")
         return False
 
-
-    # Ensure 'prev_hash' field checks out
-
-    elif (not 'prev_hash' in block) or\
-         (not block['prev_hash'] in allowed_hashes):
-        print(block['prev_hash'] in allowed_hashes)
-        print("bad hash")
+    if not block['version'] in allowed_versions:
+        print(f"bad version-{block['version']} need {allowed_versions}")
         return False
 
-
-    # Ensure the payload checks out
-    elif (not 'payload' in block) or\
-         (not isinstance(block['payload'],dict)) or\
-         (('chat' in block['payload']) and (not isinstance(block['payload']['chat'],str))):
-
-        print("bad payload")
+    if not 'prev_hash' in block:
+        print("missing prev_hash")
         return False
 
+    if not block['prev_hash'] in allowed_hashes:
+        print(f"{block['prev_hash'][:10]} not in hashes")
+        return False
+
+    if not 'payload' in block:
+        print("missing payload")
+        return False
+
+    if not isinstance(block['payload'],dict):
+        print(f"payload needs to be dict, is {type(block['payload'])}")
+        return False
+
+    if 'chat' in block['payload'] and not isinstance(block['payload']['chat'], str):
+        print("payload of 'chat' must be a str")
+        return False
 
     # Ensure block length req is met <= 1KB
-    elif (len(block_to_JSON(block)) > 1024):
+    if len(block_to_JSON(block)) > 1024:
         print("bad len")
         return False
 
-    # Ensure Ver1 blocks have a nonce
-    elif (block['version'] == 1) and\
-         (not 'nonce' in block):
-        return False
+    if (block['version'] == 1):
+        if (not 'nonce' in block):
+            return False
 
-    elif (block['verison' == 1]) and\
-         (not hash(loads(block).encode())[:6] == '000000'):
-        return False
+        elif (not hash(loads(block).encode())[:6] == '000000'):
+            return False
 
     return True
-
 
 # Sends a block containing 'msg' to 'host' on 'port'
 def send_chat(msg,host,port):

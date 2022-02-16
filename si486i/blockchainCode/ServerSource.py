@@ -338,12 +338,9 @@ class DynamicServer:
         self.app.run(host=host,port=port)
 
 class VersionOneServer:
-
-
 ################################################################################
 #                                   Run Init
 ################################################################################
-
     def __init__(self):
 
         # Info
@@ -355,11 +352,9 @@ class VersionOneServer:
                                                 #                 'current.json'
         self.scan_chains()                      # Builds the initial chains list
         printc(f"\tInitialized, Starting server\n\n\n",GREEN)
-
 ################################################################################
 #                    HANDLE HEAD REQUESTS
 ################################################################################
-
         @self.app.route('/head')
         def head():
             # Some simple debug code
@@ -374,12 +369,9 @@ class VersionOneServer:
 
             # Can't imagine how this would not return 200
             return info['head'], 200
-
-
 ################################################################################
 #                    HANDLE HASH-FETCH REQUESTS
 ################################################################################
-
         @self.app.route('/fetch/<digest>')
         def fetch(digest):
 
@@ -400,12 +392,9 @@ class VersionOneServer:
                     block = file.read()
                     flock(file,LOCK_UN)
                     return block, 200
-
-
 ################################################################################
 #                    HANDLE PUSH REQUESTS TO THE SERVER
 ################################################################################
-
         @self.app.route('/push', methods=['POST'])
         def push_block():
 
@@ -424,7 +413,7 @@ class VersionOneServer:
                 return f"JSON error when decoding '{block}'", 418
 
             # Check if the block fields are valid
-            if not check_fields(block,allowed_versions = [1],allowed_hashes=['']+grab_cached_hashes()):
+            if not check_fields(block,allowed_versions = [1], allowed_hashes=['']+grab_cached_hashes(version=1)):
                 printc(f"\trejected block - invalid",RED)
                 return "bad block", 418
 
@@ -444,12 +433,9 @@ class VersionOneServer:
                 printc(f"\taccepted block",GREEN)
                 self.update_chains(block)
                 return "Accepted!", 200
-
-
 ################################################################################
 #                Before server starts, check which chain to use
 ################################################################################
-
     def scan_chains(self):
 
         # Info
@@ -513,18 +499,15 @@ class VersionOneServer:
 
         # Keep track of all chains
         self.all_chains = hash_len
-
 ################################################################################
 #                  As server runs, update the current chains
 ################################################################################
-
     def update_chains(self,block):
         block_hash = hash(dumps(block).encode())
         prev_hash = block['prev_hash']
 
         # This case we are adding to an existing chain
         if block['prev_hash'] in self.all_chains:
-
             # Info
             printc(f"pushed block into chain len {self.all_chains[prev_hash]}",TAN)
 
@@ -532,9 +515,7 @@ class VersionOneServer:
             prev_len = self.all_chains[prev_hash]
 
         # Update the chain to have new head
-            del(self.all_chains[prev_hash])
             self.all_chains[block_hash] = prev_len + 1
-            printc(f"updated {prev_hash[:10]} chain, now len {self.all_chains[block_hash]}",RED)
 
             # If this makes a new longest chain, update file
             if self.all_chains[block_hash] > self.longest_chain:
@@ -548,9 +529,6 @@ class VersionOneServer:
         # This case, this is a new block
         else:
 
-            # Info
-            printc(f"pushed block not part of existing chain",TAN)
-
         # Make new chain
             self.all_chains[block_hash] = 1
 
@@ -560,7 +538,6 @@ class VersionOneServer:
                 self.longest_chain = self.all_chains[block_hash]
                 self.empty = False
                 self.write_current()
-
 ################################################################################
 #                Write the current.json with most recent chain data
 ################################################################################

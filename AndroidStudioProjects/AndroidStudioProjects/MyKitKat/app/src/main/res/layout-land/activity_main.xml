@@ -1,41 +1,95 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".MainActivity"
+    android:background="@color/darkGray"
     >
 
-
+    <!--The Text View Output -->
     <TextView
         style="@style/outputText"
         android:text="@string/calcOutput"
+        android:gravity="center"
+        android:layout_weight=".2"
         android:id="@+id/outputText"
         />
 
+    <!--The Top Row of Buttons -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight=".1"
-        >
-        <TextView
-            android:text=""
-            style="@style/calcButtonLand"
-            android:layout_weight="2"
+        android:background="@color/black">
+
+        <!--Extra function buttons -->
+        <Button
+            android:text="("
+            android:id="@+id/lPer"
+            style="@style/extraOpButton"
+            />
+        <Button
+            android:text=")"
+            android:id="@+id/rPer"
+            style="@style/extraOpButton"
+            />
+        <Button
+            app:backgroundTint="@null"
+            android:text="mc"
+            android:id="@+id/mc"
+            style="@style/extraOpButton"
+
 
             />
-
-        <TextView
-            android:text="done"
-            style="@style/calcButtonLand"
-            android:layout_weight="1"
-            android:backgroundTint="@color/darkGray"
-            android:textSize="40dp"
-
-
+        <Button
+            app:backgroundTint="@null"
+            android:text="m+"
+            android:id="@+id/mp"
+            style="@style/extraOpButton"
             />
+        <Button
+            app:backgroundTint="@null"
+            android:text="m-"
+            android:id="@+id/mm"
+            style="@style/extraOpButton"
+            />
+        <Button
+            app:backgroundTint="@null"
+            android:text="mr"
+            android:id="@+id/mr"
+            style="@style/extraOpButton"
+            />
+
+        <Button
+            app:backgroundTint="@null"
+            android:text="AC"
+            android:id="@+id/AC_norm"
+            style="@style/calcTopButton"
+            />
+        <Button
+            app:backgroundTint="@null"
+            android:text="+/-"
+            android:id="@+id/plusMinus_norm"
+            style="@style/calcTopButton"
+            />
+        <Button
+            app:backgroundTint="@null"
+            android:text="%"
+            android:id="@+id/mod_norm"
+            style="@style/calcTopButton"
+            />
+        <Button
+            app:backgroundTint="@null"
+            android:text="/"
+            android:id="@+id/div_norm"
+            style="@style/sideCalcButton"
+            />
+
+
 
 
     </LinearLayout>
@@ -43,90 +97,285 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight=".1"
-        >
+        android:background="@color/black">
+
+        <!--Extra function buttons -->
         <Button
+            android:text="2nd"
+            android:id="@+id/twoND"
+            style="@style/extraOpButton"
+            />
+        <Button
+            android:text="x²"
+            android:id="@+id/xSquare"
+            style="@style/extraOpButton"
+            />
+        <Button
+            app:backgroundTint="@null"
+            android:text="x³"
+            android:id="@+id/xCube"
+            style="@style/extraOpButton"
+
+
+            />
+        <Button
+            app:backgroundTint="@null"
+            android:text="x\u02B8"
+            android:id="@+id/xToY"
+            style="@style/extraOpButton"/>
+        <Button
+            app:backgroundTint="@null"
+            android:text="e\u1D58"
+            android:id="@+id/eToX"
+            style="@style/extraOpButton"
+            />
+        <Button
+            app:backgroundTint="@null"
+            android:text="10\u1D58"
+            android:id="@+id/tenToX"
+            style="@style/extraOpButton"
+            />
+
+        <!--Portrait mode buttons -->
+        <Button
+            app:backgroundTint="@null"
             android:text="7"
-            style="@style/calcButtonLand"
-
+            android:id="@+id/b7_norm"
+            style="@style/numButton"
             />
         <Button
+            app:backgroundTint="@null"
             android:text="8"
-            style="@style/calcButtonLand"
-
+            android:id="@+id/b8_norm"
+            style="@style/numButton"
             />
         <Button
+            app:backgroundTint="@null"
             android:text="9"
-            style="@style/calcButtonLand"
+            android:id="@+id/b9_norm"
+            style="@style/numButton"
             />
         <Button
-            android:text="\"
-            style="@style/calcButtonLand"
-
-            />
-
-
-    </LinearLayout>
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight=".1"
-        >
-
-        <Button
-            android:text="4"
-            style="@style/calcButtonLand"
-            />
-        <Button
-            android:text="5"
-            style="@style/calcButtonLand"
-            />
-        <Button
-            android:text="6"
-            style="@style/calcButtonLand"
-            />
-        <Button
+            app:backgroundTint="@null"
             android:text="x"
-            style="@style/calcButtonLand"
-
+            android:id="@+id/mul_norm"
+            style="@style/sideCalcButton"
             />
+
+
+
+
     </LinearLayout>
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight=".1"
-        >
+        android:background="@color/black">
 
+        <!--Extra function buttons -->
         <Button
+            android:text="1/x"
+            android:id="@+id/xReciprocal"
+            style="@style/extraOpButton"
+            />
+        <Button
+            android:text="\u221A x"
+            android:id="@+id/XSqrt"
+            style="@style/extraOpButton"
+            />
+        <Button
+            app:backgroundTint="@null"
+            android:text="\u221B x"
+            android:id="@+id/xCubeRoot"
+            style="@style/extraOpButton"
+
+
+            />
+        <Button
+            app:backgroundTint="@null"
+            android:text="y \u221A x"
+            android:id="@+id/xSqrtY"
+            style="@style/extraOpButton"/>
+        <Button
+            app:backgroundTint="@null"
+            android:text="ln"
+            android:id="@+id/ln"
+            style="@style/extraOpButton"
+            />
+        <Button
+            app:backgroundTint="@null"
+            android:text="log⏨"
+            android:id="@+id/log10"
+            style="@style/extraOpButton"
+            />
+
+        <!--Portrait mode buttons -->
+        <Button
+            app:backgroundTint="@null"
+            android:text="4"
+            android:id="@+id/b4_norm"
+            style="@style/numButton"
+            />
+        <Button
+            app:backgroundTint="@null"
+            android:text="5"
+            android:id="@+id/b5_norm"
+            style="@style/numButton"
+            />
+        <Button
+            app:backgroundTint="@null"
+            android:text="6"
+            android:id="@+id/b6_norm"
+            style="@style/numButton"
+            />
+        <Button
+            app:backgroundTint="@null"
+            android:text="-"
+            android:id="@+id/sub_norm"
+            style="@style/sideCalcButton"
+            />
+
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight=".1"
+        android:background="@color/black">
+
+        <!--Extra function buttons -->
+        <Button
+            android:text="x!"
+            android:id="@+id/xFactorial"
+            style="@style/extraOpButton"
+            />
+        <Button
+            android:text="sin"
+            android:id="@+id/sin"
+            style="@style/extraOpButton"
+            />
+        <Button
+            app:backgroundTint="@null"
+            android:text="cos"
+            android:id="@+id/cos"
+            style="@style/extraOpButton"
+
+
+            />
+        <Button
+            app:backgroundTint="@null"
+            android:text="tan"
+            android:id="@+id/tan"
+            style="@style/extraOpButton"/>
+        <Button
+            app:backgroundTint="@null"
+            android:text="e"
+            android:id="@+id/e"
+            style="@style/extraOpButton"
+            />
+        <Button
+            app:backgroundTint="@null"
+            android:text="EE"
+            android:id="@+id/EE"
+            style="@style/extraOpButton"
+            />
+
+        <!--Portrait mode buttons -->
+        <Button
+            app:backgroundTint="@null"
             android:text="1"
-            style="@style/calcButtonLand"
+            android:id="@+id/b1_norm"
+            style="@style/numButton"
             />
-
         <Button
+            app:backgroundTint="@null"
             android:text="2"
-            style="@style/calcButtonLand"
+            android:id="@+id/b2_norm"
+            style="@style/numButton"
             />
-
         <Button
+            app:backgroundTint="@null"
             android:text="3"
-            style="@style/calcButtonLand"
+            android:id="@+id/b3_norm"
+            style="@style/numButton"
             />
         <Button
+            app:backgroundTint="@null"
             android:text="+"
-            style="@style/calcButtonLand"
-
+            android:id="@+id/add_norm"
+            style="@style/sideCalcButton"
             />
 
 
     </LinearLayout>
-    <TextView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight=".1"
-        android:text=""
-        />
+        android:background="@color/black">
+
+        <!--Extra function buttons -->
+        <Button
+            android:text="Rad"
+            android:id="@+id/Rad"
+            style="@style/extraOpButton"
+            />
+        <Button
+            android:text="sinh"
+            android:id="@+id/sinh"
+            style="@style/extraOpButton"
+            />
+        <Button
+            app:backgroundTint="@null"
+            android:text="cosh"
+            android:id="@+id/cosh"
+            style="@style/extraOpButton"
+
+
+            />
+        <Button
+            app:backgroundTint="@null"
+            android:text="tanh"
+            android:id="@+id/tanh"
+            style="@style/extraOpButton"/>
+        <Button
+            app:backgroundTint="@null"
+            android:text="π"
+            android:id="@+id/pi"
+            style="@style/extraOpButton"
+            />
+        <Button
+            app:backgroundTint="@null"
+            android:text="Rand"
+            android:id="@+id/Rand"
+            style="@style/extraOpButton"
+            />
+
+        <!--Portrait mode buttons -->
+        <Button
+            app:backgroundTint="@null"
+            android:text="0"
+            android:id="@+id/b0_norm"
+            style="@style/numButton"
+            android:layout_weight="2"/>
+        <Button
+            app:backgroundTint="@null"
+            android:text="."
+            android:id="@+id/dot_norm"
+            style="@style/numButton"
+            />
+        <Button
+            app:backgroundTint="@null"
+            android:text="="
+            android:id="@+id/eq_norm"
+            style="@style/sideCalcButton"
+            />
+
+
+
+
+    </LinearLayout>
 
 
 </LinearLayout>
 
 
-    ntLayout>

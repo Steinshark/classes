@@ -5,11 +5,11 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity"
-
     app:layout_anchorGravity="center"
-    android:layout_gravity="center"
+    android:layout_gravity="center">
 
-    >
+
+    <!--The Text Display -->
     <TextView
         android:id="@+id/output"
         android:layout_width="match_parent"
@@ -17,26 +17,23 @@
         app:layout_constraintHeight_percent="0.34"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
-        android:background="#0000ff"
-        android:text="\@+id/view1 \n\n layout_constraintTop_toTopOf=parent"
+        android:background="@color/black"
+        android:text="0"
         android:gravity="center"
+        android:fontFamily="sans-serif-black"
+        android:textAlignment= "center"
+        android:textColor = "@color/white"
+        android:textSize = "50sp"
         />
 
-
-
-
+    <!--Top ROW -->
     <Button
         android:text="AC"
         android:id="@+id/AC"
         app:layout_constraintTop_toBottomOf="@id/output"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toLeftOf="@id/plusMinus"
-
-
-        style="@style/contrainedButton"
-        app:backgroundTint="#c3c3c3"
-        app:layout_constraintWidth_percent="0.22"
-        app:layout_constraintHeight_percent="0.12"
+        style="@style/contrainedButtonTop"
         />
     <Button
         android:text="+/-"
@@ -45,10 +42,7 @@
         app:layout_constraintLeft_toRightOf="@id/AC"
         app:layout_constraintRight_toLeftOf="@id/mod"
 
-        style="@style/contrainedButton"
-        app:backgroundTint="#c3c3c3"
-        app:layout_constraintWidth_percent="0.22"
-        app:layout_constraintHeight_percent="0.12"
+        style="@style/contrainedButtonTop"
         />
     <Button
         android:text="%"
@@ -57,10 +51,7 @@
         app:layout_constraintLeft_toRightOf="@id/plusMinus"
         app:layout_constraintRight_toLeftOf="@id/div"
 
-        style="@style/contrainedButton"
-        app:backgroundTint="#c3c3c3"
-        app:layout_constraintWidth_percent="0.22"
-        app:layout_constraintHeight_percent="0.12"
+        style="@style/contrainedButtonTop"
         />
     <Button
         android:text="/"
@@ -70,14 +61,9 @@
 
 
         style="@style/contrainedButtonRight"
-        app:backgroundTint="#f59b42"
-        app:layout_constraintWidth_percent="0.22"
-        app:layout_constraintHeight_percent="0.12"
         />
 
-
-
-
+    <!--2nd ROW -->
     <Button
         android:text="7"
         android:id="@+id/b7"
@@ -87,9 +73,6 @@
 
 
         style="@style/contrainedButton"
-        app:backgroundTint="#d3d3d3"
-        app:layout_constraintWidth_percent="0.22"
-        app:layout_constraintHeight_percent="0.12"
         />
     <Button
         android:text="8"
@@ -99,9 +82,6 @@
         app:layout_constraintRight_toLeftOf="@id/mod"
 
         style="@style/contrainedButton"
-        app:backgroundTint="#d3d3d3"
-        app:layout_constraintWidth_percent="0.22"
-        app:layout_constraintHeight_percent="0.12"
         />
     <Button
         android:text="9"
@@ -111,25 +91,16 @@
         app:layout_constraintRight_toLeftOf="@id/mul"
 
         style="@style/contrainedButton"
-        app:backgroundTint="#d3d3d3"
-        app:layout_constraintWidth_percent="0.22"
-        app:layout_constraintHeight_percent="0.12"
         />
     <Button
         android:text="x"
         android:id="@+id/mul"
         app:layout_constraintTop_toBottomOf="@id/div"
         app:layout_constraintRight_toRightOf="parent"
-
-
         style="@style/contrainedButtonRight"
-        app:backgroundTint="#f59b42"
-        app:layout_constraintWidth_percent="0.22"
-        app:layout_constraintHeight_percent="0.12"
         />
 
-
-
+    <!--3rd ROW -->
     <Button
         android:text="4"
         android:id="@+id/b4"
@@ -139,9 +110,6 @@
 
 
         style="@style/contrainedButton"
-        app:backgroundTint="#d3d3d3"
-        app:layout_constraintWidth_percent="0.22"
-        app:layout_constraintHeight_percent="0.12"
         />
     <Button
         android:text="5"
@@ -151,9 +119,6 @@
         app:layout_constraintRight_toLeftOf="@id/b6"
 
         style="@style/contrainedButton"
-        app:backgroundTint="#d3d3d3"
-        app:layout_constraintWidth_percent="0.22"
-        app:layout_constraintHeight_percent="0.12"
         />
     <Button
         android:text="6"
@@ -163,9 +128,6 @@
         app:layout_constraintRight_toLeftOf="@id/sub"
 
         style="@style/contrainedButton"
-        app:backgroundTint="#d3d3d3"
-        app:layout_constraintWidth_percent="0.22"
-        app:layout_constraintHeight_percent="0.12"
         />
     <Button
         android:text="-"
@@ -175,13 +137,9 @@
 
 
         style="@style/contrainedButtonRight"
-        app:backgroundTint="#f59b42"
-        app:layout_constraintWidth_percent="0.22"
-        app:layout_constraintHeight_percent="0.12"
         />
 
-
-
+    <!--4th ROW -->
     <Button
         android:text="1"
         android:id="@+id/b1"
@@ -191,9 +149,6 @@
 
 
         style="@style/contrainedButton"
-        app:backgroundTint="#d3d3d3"
-        app:layout_constraintWidth_percent="0.22"
-        app:layout_constraintHeight_percent="0.12"
         />
     <Button
         android:text="2"
@@ -203,9 +158,6 @@
         app:layout_constraintRight_toLeftOf="@id/b3"
 
         style="@style/contrainedButton"
-        app:backgroundTint="#d3d3d3"
-        app:layout_constraintWidth_percent="0.22"
-        app:layout_constraintHeight_percent="0.12"
         />
     <Button
         android:text="3"
@@ -215,9 +167,6 @@
         app:layout_constraintRight_toLeftOf="@id/add"
 
         style="@style/contrainedButton"
-        app:backgroundTint="#d3d3d3"
-        app:layout_constraintWidth_percent="0.22"
-        app:layout_constraintHeight_percent="0.12"
         />
     <Button
         android:text="+"
@@ -227,12 +176,9 @@
 
 
         style="@style/contrainedButtonRight"
-        app:backgroundTint="#f59b42"
-        app:layout_constraintWidth_percent="0.22"
-        app:layout_constraintHeight_percent="0.12"
         />
 
-
+    <!--5th ROW -->
     <Button
         android:text="0"
         android:id="@+id/b0"
@@ -242,7 +188,6 @@
 
 
         style="@style/contrainedButton"
-        app:backgroundTint="#d3d3d3"
         app:layout_constraintWidth_percent="0.5"
         app:layout_constraintHeight_percent="0.12"
         />
@@ -254,9 +199,6 @@
         app:layout_constraintRight_toLeftOf="@id/eq"
 
         style="@style/contrainedButton"
-        app:backgroundTint="#d3d3d3"
-        app:layout_constraintWidth_percent="0.22"
-        app:layout_constraintHeight_percent="0.12"
         />
     <Button
         android:text="="
@@ -267,9 +209,6 @@
 
 
         style="@style/contrainedButtonRight"
-        app:backgroundTint="#f59b42"
-        app:layout_constraintWidth_percent="0.22"
-        app:layout_constraintHeight_percent="0.12"
         />
 
 

@@ -22,10 +22,9 @@ def hash(bytes):
     return digest.hex()
 
 
-
 # encodes the blockchain found at a given hostname and port into a list
 # of tuples: (hash, blockAsPythonDict)
-def get_blockchain(hostname='cat',port='5000',caching=False,cache_location='cache', last_verified=''):
+def get_blockchain(hostname='cat',port='5000',caching=False,cache_location='cache', last_verified='',version=0):
 
     # if caching, then check if the folder exists, and create if not
     if caching:
@@ -35,7 +34,6 @@ def get_blockchain(hostname='cat',port='5000',caching=False,cache_location='cach
 
     # init all variables we will use
     blockchain = []
-    trust = False
     block_hash= None
 
     # Grab the hash
@@ -49,10 +47,6 @@ def get_blockchain(hostname='cat',port='5000',caching=False,cache_location='cach
     index = 0
     while not block_hash== '':
         index += 1
-        # First check if this block has been verified
-        if block_hash == last_verified:
-            trust = True
-
         # check if this block exists in cache
         block_filename  = f"{cache_location}/{block_hash}.json"
         block_exists    = isfile(block_filename)
@@ -61,7 +55,7 @@ def get_blockchain(hostname='cat',port='5000',caching=False,cache_location='cach
         if block_exists:
             with open(block_filename, 'r') as file:
                 flock(file,LOCK_SH)
-                block = loads(file.read())
+                block = JSON_to_block(file.read())
                 flock(file,LOCK_UN)
 
         else:
@@ -81,7 +75,8 @@ def get_blockchain(hostname='cat',port='5000',caching=False,cache_location='cach
             print(h)
             raise BlockChainError(h)
 
-        check = check_fields(block,allowed_versions=[0],allowed_hashes=['',hashed_to],trust=trust)
+        check = check_fields(block,allowed_versions=[version],allowed_hashes=['',hashed_to],trust=trust)
+        
         if check:
             # add it to the chain
             blockchain.insert(0,(block_hash,block))

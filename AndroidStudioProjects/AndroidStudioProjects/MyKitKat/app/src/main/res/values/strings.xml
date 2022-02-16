@@ -1,4 +1,4 @@
 <resources>
     <string name="app_name">My KitKat</string>
-    <string name="calcOutput"> outText</string>
+    <string name="calcOutput"></string>
 </resources>
