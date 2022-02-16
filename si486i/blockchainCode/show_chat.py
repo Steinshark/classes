@@ -82,10 +82,10 @@ class FetchService:
 if __name__ == '__main__':
 
     # Create an instance of the class
-    instance = FetchService()
+    instance = FetchService(host='cat',port=5002)
 
     # Format the arguments
-    instance.format_parser()
+    #instance.format_parser()
 
     # Try to download the blockchain and verify at the same time
     instance.check_for_head()
