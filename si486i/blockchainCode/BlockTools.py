@@ -21,6 +21,13 @@ except ModuleNotFoundError:
 ############################ FUNCTIONS FOR PROCESSING BLOCKS ############################
 #########################################################################################
 
+# hash function wrapper
+def sha_256_hash(bytes):
+    hasher = sha3_256()
+    hasher.update(bytes)
+    digest = hasher.digest()
+    return digest.hex()
+
 # Make a request to where the head hash should be
 def retrieve_head_hash(host="cat",port="5000",timeout=3):
     url = f"http://{host}:{port}/head"
@@ -156,9 +163,12 @@ def check_fields(block,allowed_versions=[0],allowed_hashes=[''],trust=False):
 
     if (block['version'] == 1):
         if (not 'nonce' in block):
+            print("nonce not found")
             return False
 
-        elif (not sha_256_hash(loads(block).encode())[:6] == '000000'):
+        block_hash = sha_256_hash(dumps(block).encode())
+        if (not block_hash[:6] == '000000'):
+            print(f"hash not correct: {block_hash} ")
             return False
 
     return True
@@ -194,7 +204,8 @@ def send_chat(msg,host,port,version=0):
 def mine_block(block):
     block_hash = '111111'
     while not block_hash[:6] == '000000':
-        block_hash  = sha_256_hash(block_to_JSON(block).encode())
         block['nonce'] += 1
+        block_hash  = sha_256_hash(block_to_JSON(block).encode())
     input(f"found block {block}")
+    input(f"kicking back block with hash {sha_256_hash(block_to_JSON(block).encode())}")
     return block

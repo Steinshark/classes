@@ -4,7 +4,7 @@
 from hashlib import sha256, sha3_256
 from json import loads, dumps, JSONDecodeError
 from requests import get, post, Timeout
-from BlockTools import *
+import BlockTools
 from BlockchainErrors import *
 from os.path import isfile, isdir, join
 from os import mkdir
@@ -38,7 +38,7 @@ def get_blockchain(hostname='cat',port='5000',caching=False,cache_location='cach
 
     # Grab the hash
     try:
-        block_hash= retrieve_head_hash(host=hostname,port=port)
+        block_hash= BlockTools.retrieve_head_hash(host=hostname,port=port)
     except ConnectionException as c:
         raise BlockChainRetrievalError(f"Error retrieving head hash\n{c}")
 
@@ -55,12 +55,12 @@ def get_blockchain(hostname='cat',port='5000',caching=False,cache_location='cach
         if block_exists:
             with open(block_filename, 'r') as file:
                 flock(file,LOCK_SH)
-                block = JSON_to_block(file.read())
+                block = BlockTools.JSON_to_block(file.read())
                 flock(file,LOCK_UN)
 
         else:
             try:
-                block = retrieve_block(block_hash,host=hostname,port=port)
+                block = BlockTools.retrieve_block(block_hash,host=hostname,port=port)
                 block = loads(block)
             except JSONDecodeError as j:
                 raise BlockChainError(f"{Color.RED}Error decoding JSON text fetched from server: {block[:30]}{Color.END}")
@@ -70,12 +70,13 @@ def get_blockchain(hostname='cat',port='5000',caching=False,cache_location='cach
 
         # verify the block
         try:
-            hashed_to =sha_256_hash(retrieve_block(retrieve_prev_hash(block),host=hostname,port=port).encode())
+            next_block = BlockTools.retrieve_block(block['prev_hash'],host=hostname,port=port)
+            hashed_to =sha_256_hash(next_block.encode())
         except HashRetrievalException as h:
             print(h)
             raise BlockChainError(h)
 
-        check = check_fields(block,allowed_versions=[version],allowed_hashes=['',hashed_to],trust=trust)
+        check = BlockTools.check_fields(block,allowed_versions=[version],allowed_hashes=['',hashed_to],trust=False)
 
         if check:
             # add it to the chain
@@ -88,7 +89,8 @@ def get_blockchain(hostname='cat',port='5000',caching=False,cache_location='cach
                     flock(file,LOCK_UN)
         else:
             raise BlockChainVerifyError(f"{Color.RED}bad block at position {index}{Color.END}")
-        block_hash = retrieve_prev_hash(block)
+        block_hash = block['prev_hash']
+        print(block_hash)
 
 
     return blockchain
