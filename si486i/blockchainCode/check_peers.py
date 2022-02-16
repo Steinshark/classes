@@ -19,7 +19,7 @@ for host in hosts:
     for port in ports:
         printc(f"{port}",BLUE)
         try:
-            blockchain_download = get_blockchain(host,port)
+            blockchain_download = get_blockchain(host,port,version=1)
             size = len(blockchain_download)
             printc(f"blockchain verified!\n{size} blocks in chain\n",GREEN)
 
