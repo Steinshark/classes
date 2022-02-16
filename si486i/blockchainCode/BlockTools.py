@@ -96,8 +96,18 @@ def build_block(prev_hash,payload,ver):
 
 
 # returns a list of all the allowed hashes
-def grab_cached_hashes(cache_location='cache'):
-    allowed_hashes = [(file.split('.')[0]).strip() for file in listdir(cache_location) if file.split('.')[-1] == 'json' and not file.split('.')[0] == 'current']
+def grab_cached_hashes(cache_location='cache',version=0):
+    allowed_hashes = []
+    if verison == 1:
+        for fname in listdir(cache_location):
+            fname = fname.strip()
+            if fname.split('.')[-1] == 'json' and fname.split('.')[0] == 'current' and fname[:6] =='000000':
+                allowed_hashes.append(fname.strip().split(".")[0])
+    else:
+        for fname in listdir(cache_location):
+            fname = fname.strip()
+            if fname.split('.')[-1] == 'json' and fname.split('.')[0] == 'current':
+                allowed_hashes.append(fname.strip().split(".")[0])
     return allowed_hashes
 
 
@@ -130,6 +140,7 @@ def check_fields(block,allowed_versions=[0],allowed_hashes=[''],trust=False):
 
 
     # Ensure 'prev_hash' field checks out
+
     elif (not 'prev_hash' in block) or\
          (not block['prev_hash'] in allowed_hashes):
         print(block['prev_hash'] in allowed_hashes)
@@ -149,6 +160,15 @@ def check_fields(block,allowed_versions=[0],allowed_hashes=[''],trust=False):
     # Ensure block length req is met <= 1KB
     elif (len(block_to_JSON(block)) > 1024):
         print("bad len")
+        return False
+
+    # Ensure Ver1 blocks have a nonce
+    elif (block['version'] == 1) and
+         (not 'nonce' in block):
+        return False
+        
+    elif (block['verison' == 1]) and
+         (not hash(loads(block).encode())[:6] == '000000'):
         return False
 
     return True
