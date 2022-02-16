@@ -4,6 +4,13 @@ import tensorflow as tf
 import numpy as np
 import math
 
+
+
+
+def map_to_missing(holes, full):
+    d = tf.sparse.map_values(tf.ones_like,s)
+
+
 def GradientDescent(real_data,alpha=.1,iters=1000):
 
     # Ascertain what dimensions we are in
@@ -20,8 +27,6 @@ def GradientDescent(real_data,alpha=.1,iters=1000):
 def RMSE(A,p,q):
 #       sqrt( (1 / T)*(sum(A_ij - (p_i)(q_j))^2) )
     # 1 / T
-    if isinstance(A,tf.sparse.SparseTensor):
-        non_zero = tf.math.count_nonzero
     Tinv = tf.constant(1 / tf.math.count_nonzero(A),dtype=tf.dtypes.float32)
 
     #
