@@ -207,4 +207,5 @@ def mine_block(block):
         block_hash  = sha_256_hash(block_to_JSON(block).encode())
         block['nonce'] += 1
     input(f"found block {block}")
+    input(f"kicking back block with hash {sha_256_hash(block_to_JSON(block).encode())}")
     return block
