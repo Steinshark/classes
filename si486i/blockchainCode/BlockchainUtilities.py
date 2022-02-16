@@ -70,7 +70,7 @@ def get_blockchain(hostname='cat',port='5000',caching=False,cache_location='cach
 
         # verify the block
         try:
-            hashed_to =sha_256_hash(retrieve_block(retrieve_prev_hash(block),host=hostname,port=port).encode())
+            hashed_to =sha_256_hash(retrieve_block(block['prev_hash'],host=hostname,port=port).encode())
         except HashRetrievalException as h:
             print(h)
             raise BlockChainError(h)
