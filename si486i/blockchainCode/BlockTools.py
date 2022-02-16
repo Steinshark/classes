@@ -165,7 +165,7 @@ def check_fields(block,allowed_versions=[0],allowed_hashes=[''],trust=False):
         if (not 'nonce' in block):
             return False
 
-        elif (not sha_256_hash(loads(block).encode())[:6] == '000000'):
+        elif (not sha_256_hash(dumps(block).encode())[:6] == '000000'):
             return False
 
     return True
