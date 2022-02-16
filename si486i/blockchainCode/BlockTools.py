@@ -196,3 +196,4 @@ def mine_block(block):
     while not block_hash[:6] == '000000':
         block_hash  = sha_256_hash(block_to_JSON(block).encode())
         block['nonce'] += 1
+    input(f"found block {block}")
