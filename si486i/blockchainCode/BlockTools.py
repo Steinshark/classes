@@ -2,6 +2,7 @@
 #######################################  IMPORTS  #######################################
 #########################################################################################
 from BlockchainErrors import *
+from BlockchainUtilities import *
 from json import loads, dumps, JSONDecodeError
 from requests import get, post,Timeout, RequestException
 from os.path import isfile, isdir, join
@@ -21,7 +22,7 @@ except ModuleNotFoundError:
 #########################################################################################
 
 # Make a request to where the head hash should be
-def retrieve_head_hash(host="cat",port="5000",timeout=3):
+def retrieve_head_sha_256_hash(host="cat",port="5000",timeout=3):
     url = f"http://{host}:{port}/head"
 
     try:
@@ -157,7 +158,7 @@ def check_fields(block,allowed_versions=[0],allowed_hashes=[''],trust=False):
         if (not 'nonce' in block):
             return False
 
-        elif (not hash(loads(block).encode())[:6] == '000000'):
+        elif (not sha_256_hash(loads(block).encode())[:6] == '000000'):
             return False
 
     return True
@@ -195,7 +196,7 @@ def mine_block(block):
     block_hash = '111111'
     while not block_hash[:6] == '000000':
         input(f"block is {block}")
-        block_hash  = hash(block_to_JSON(block).encode())
+        block_hash  = sha_256_hash(block_to_JSON(block).encode())
         print(f"{block_hash} at nonce {block['nonce']}")
         block['nonce'] += 1
         input(f"block is {block}")

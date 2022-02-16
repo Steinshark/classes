@@ -15,7 +15,7 @@ from fcntl import flock, LOCK_SH,LOCK_EX, LOCK_UN
 #########################################################################################
 
 # hash function wrapper
-def hash(bytes):
+def sha_256_hash(bytes):
     hasher = sha3_256()
     hasher.update(bytes)
     digest = hasher.digest()
@@ -70,13 +70,13 @@ def get_blockchain(hostname='cat',port='5000',caching=False,cache_location='cach
 
         # verify the block
         try:
-            hashed_to = hash(retrieve_block(retrieve_prev_hash(block),host=hostname,port=port).encode())
+            hashed_to =sha_256_hash(retrieve_block(retrieve_prev_hash(block),host=hostname,port=port).encode())
         except HashRetrievalException as h:
             print(h)
             raise BlockChainError(h)
 
         check = check_fields(block,allowed_versions=[version],allowed_hashes=['',hashed_to],trust=trust)
-        
+
         if check:
             # add it to the chain
             blockchain.insert(0,(block_hash,block))
@@ -108,7 +108,7 @@ def verify_blockchain(blockchain):
         if index == len(blockchain) - 1:
             prev_hash = ''
         else:
-            prev_hash = hash(block_to_JSON(blockchain[index+1][1]).encode())
+            prev_hash =sha_256_hash(block_to_JSON(blockchain[index+1][1]).encode())
 
         # Check the fields of the block for errors
         if not check_fields(block,allowed_hashes=[prev_hash]):

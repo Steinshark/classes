@@ -54,7 +54,7 @@ class StaticServer:
             if arguments[0] == "add":
                 if arguments[1] == "block":
                     block = arguments[2]
-                    block_hash = hash('hex',block.encode()).hexdigest()
+                    block_hash =sha_256_hash('hex',block.encode()).hexdigest()
                     self.blocks[block_hash] = block
 
             # Allow for block removal
@@ -71,11 +71,11 @@ class StaticServer:
             pass
         elif not self.blocks and gen_block is None:
             block = build_block('',{'chat' : 'my very own blockchain!'},0)
-            block_hash = hash('hex',block.encode())
+            block_hash =sha_256_hash('hex',block.encode())
             self.blocks[block_hash] = block
             print(f"head is now {list(self.blocks.keys())[-1]}")
         else:
-            block_hash = hash('hex',gen_block.encode())
+            block_hash =sha_256_hash('hex',gen_block.encode())
             self.blocks[block_hash] = gen_block
             print(f"head is now {list(self.blocks.keys())[-1]}")
 
@@ -191,7 +191,7 @@ class DynamicServer:
 
                 # Back to JSON
                 block_string = dumps(block)
-                block_hash   = hash(block_string.encode())
+                block_hash   =sha_256_hash(block_string.encode())
 
                 # Save file in cache folder
                 with open(f'cache/{block_hash}.json','w') as file:
@@ -276,7 +276,7 @@ class DynamicServer:
 
     def update_chains(self,block):
         pp(self.all_chains)
-        block_hash = hash(dumps(block).encode())
+        block_hash =sha_256_hash(dumps(block).encode())
         prev_hash = block['prev_hash']
 
         # This case we are adding to an existing chain
@@ -428,7 +428,7 @@ class VersionOneServer:
 
                 # Back to JSON
                 block_string = dumps(block)
-                block_hash   = hash(block_string.encode())
+                block_hash   =sha_256_hash(block_string.encode())
                 # Save file in cache folder
                 with open(f'cache/{block_hash}.json','w') as file:
                     file.write(block_string)
@@ -506,7 +506,7 @@ class VersionOneServer:
 #                  As server runs, update the current chains
 ################################################################################
     def update_chains(self,block):
-        block_hash = hash(dumps(block).encode())
+        block_hash =sha_256_hash(dumps(block).encode())
         prev_hash = block['prev_hash']
 
         # This case we are adding to an existing chain
