@@ -23,10 +23,17 @@ class Node:
     def __init__(self):
 
         # Fetch a list of peer names (hostnames)
-        self.peers = list(map(lambda x : x.strip(),open("hosts.txt",'r').readlines()))
+        self.peers = list(  map(    lambda x : x.strip(),   open("hosts.txt",'r').readlines()   ))
 
         # Create a dict for each host holding relevant information
-        self.peer_nodes = {host : {'length' : 0, 'host' : None, 'fetcher' : None, 'head' : None} for host in self.peers}
+        self.peer_nodes = {
+            host :   {
+                'length' : 0,
+                'host' : None,
+                'fetcher' : None,
+                'head' : None}
+            for host in self.peers
+        }
 
         # The peer who's chain is the best - init as the first peer
         self.top_peer = self.peers[0]
