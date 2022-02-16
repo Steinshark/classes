@@ -191,8 +191,9 @@ def send_chat(msg,host,port,version=0):
 
 
 def mine_block(block):
+    input(f"block is {block}")
     block_hash = '111111'
     while not block_hash[:6] == '000000':
         block_hash  = hash(block_to_JSON(block).encode())
+        print(f"{block_hash} at nonce {block['nonce']}")
         block['nonce'] += 1
-        print(f"{block_hash} - {block['nonce']}")
