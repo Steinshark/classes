@@ -533,7 +533,7 @@ class VersionOneServer:
         else:
 
         # Make new chain
-            self.all_chains[block_hash] = 1
+            self.all_chains[block_hash] = iter_local_chain(block_hash,version=1)
 
         # Check if its the longest (Aka first block)
             if self.all_chains[block_hash] > self.longest_chain:

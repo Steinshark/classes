@@ -95,7 +95,7 @@ def grab_cached_hashes(cache_location='cache',version=0):
     return allowed_hashes
 
 # find chain length from a hash
-def iter_local_chain(hash):
+def iter_local_chain(hash,version=0):
     length = 0
 
     while not hash == '':
@@ -105,6 +105,8 @@ def iter_local_chain(hash):
             block_as_JSON = file.read()
             block = JSON_to_block(block_as_JSON)
             hash = block['prev_hash']
+            if version == 1 and not block['verison'] == 1:
+                return length
 
     return length
 
