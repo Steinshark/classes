@@ -98,7 +98,7 @@ def build_block(prev_hash,payload,ver):
 # returns a list of all the allowed hashes
 def grab_cached_hashes(cache_location='cache',version=0):
     allowed_hashes = []
-    if verison == 1:
+    if version == 1:
         for fname in listdir(cache_location):
             fname = fname.strip()
             if fname.split('.')[-1] == 'json' and fname.split('.')[0] == 'current' and fname[:6] =='000000':
