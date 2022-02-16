@@ -82,7 +82,7 @@ class FetchService:
 if __name__ == '__main__':
 
     # Create an instance of the class
-    instance = FetchService(host='cat',port=5002)
+    instance = FetchService(host='cat',port=5002,version=1)
 
     # Format the arguments
     #instance.format_parser()

@@ -163,9 +163,12 @@ def check_fields(block,allowed_versions=[0],allowed_hashes=[''],trust=False):
 
     if (block['version'] == 1):
         if (not 'nonce' in block):
+            print("nonce not found")
             return False
 
-        elif (not sha_256_hash(dumps(block).encode())[:6] == '000000'):
+        block_hash = sha_256_hash(dumps(block).encode())
+        if (not block_hash[:6] == '000000'):
+            print(f"hash not correct: {block_hash} ")
             return False
 
     return True
