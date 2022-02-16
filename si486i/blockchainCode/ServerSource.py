@@ -256,7 +256,7 @@ class DynamicServer:
 
         # If there were no chains
         if self.empty:
-            self.hash_len[''] = 0
+            hash_len[''] = 0
 
         # Write the longset chain
         self.write_current()
