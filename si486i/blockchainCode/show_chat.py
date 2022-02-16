@@ -1,5 +1,5 @@
 from BlockchainUtilities import *
-from BlockTools import *
+import BlockTools
 from BlockchainErrors import *
 from json import dumps, loads
 from os.path import isfile

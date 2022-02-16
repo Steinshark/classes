@@ -38,7 +38,7 @@ def get_blockchain(hostname='cat',port='5000',caching=False,cache_location='cach
 
     # Grab the hash
     try:
-        block_hash= retrieve_head_hash(host=hostname,port=port)
+        block_hash= BlockTools.retrieve_head_hash(host=hostname,port=port)
     except ConnectionException as c:
         raise BlockChainRetrievalError(f"Error retrieving head hash\n{c}")
 
@@ -60,7 +60,7 @@ def get_blockchain(hostname='cat',port='5000',caching=False,cache_location='cach
 
         else:
             try:
-                block = retrieve_block(block_hash,host=hostname,port=port)
+                block = BlockTools.retrieve_block(block_hash,host=hostname,port=port)
                 block = loads(block)
             except JSONDecodeError as j:
                 raise BlockChainError(f"{Color.RED}Error decoding JSON text fetched from server: {block[:30]}{Color.END}")
