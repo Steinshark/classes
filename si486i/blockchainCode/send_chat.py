@@ -173,7 +173,7 @@ class Node:
 
             # If their server isn't up, then forget it
             except ConnectionException:
-                break
+                return
 
             if not stack:
                 return
@@ -195,7 +195,7 @@ class Node:
 
                 # If their server isn't up, then forget it
                 except ConnectionException:
-                    break
+                    return
 
                 # If this block worked, head back up the stack
                 # (this is super inefficient I realize, but I
