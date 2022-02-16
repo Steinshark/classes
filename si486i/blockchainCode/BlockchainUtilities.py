@@ -55,7 +55,7 @@ def get_blockchain(hostname='cat',port='5000',caching=False,cache_location='cach
         if block_exists:
             with open(block_filename, 'r') as file:
                 flock(file,LOCK_SH)
-                block = JSON_to_block(file.read())
+                block = BlockTools.JSON_to_block(file.read())
                 flock(file,LOCK_UN)
 
         else:
