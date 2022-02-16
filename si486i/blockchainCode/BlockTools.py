@@ -88,27 +88,27 @@ def grab_cached_hashes(cache_location='cache',version=0):
 
     for fname in listdir(cache_location):
         fname = fname.strip()
-        hash  = fname.split('.')[0]
+        block_hash  = fname.split('.')[0]
         ext   = fname.split('.')[-1]
 
-        if version == 1 and ext == 'json' and not hash == 'current' and hash[:6] =='000000':
-            allowed_hashes.append(hash)
-        elif version == 0 and ext == 'json' and not hash == 'current':
-            allowed_hashes.append(hash)
+        if version == 1 and ext == 'json' and not block_hash == 'current' and block_hash[:6] =='000000':
+            allowed_hashes.append(block_hash)
+        elif version == 0 and ext == 'json' and not block_hash == 'current':
+            allowed_hashes.append(block_hash)
 
     return allowed_hashes
 
 # find chain length from a hash
-def iter_local_chain(hash,version=0):
+def iter_local_chain(block_hash,version=0):
     length = 0
 
-    while not hash == '':
+    while not block_hash == '':
         length += 1
         filename = f"cache/{hash}.json"
         with open(filename,'r') as file:
             block_as_JSON = file.read()
             block = JSON_to_block(block_as_JSON)
-            hash = block['prev_hash']
+            block_hash = block['prev_hash']
             if version == 1 and not block['verison'] == 1:
                 return length
 
