@@ -74,7 +74,7 @@ def build_block(prev_hash,payload,ver):
                     'version'       : ver}
     if ver == 1:
         new_block['nonce'] = 0
-        mined_block = mine_block(new_block)
+        new_block = mine_block(new_block)
 
     try:
         encoded_block = dumps(mined_block)
