@@ -39,7 +39,7 @@ class Node:
         self.top_peer = self.peers[0]
 
         # Scan all peer's nodes for most recent data
-        self.check_peer_servers()
+        #self.check_peer_servers()
 
     # Scan all peer nodes to get node info
     def check_peer_servers(self):
@@ -221,7 +221,7 @@ if __name__ == "__main__":
     n = Node()
     try:
         if sys.argv[1] == 'c':
-            BlockTools.send_chat(input("msg: "), input("host: "), 5002)
+            BlockTools.send_chat(input("msg: "), input("host: "), 5002,version=1)
             n.update_peers()
     except IndexError:
         msg = input("msg: ")
