@@ -194,8 +194,8 @@ def mine_block(block):
     input(f"block is {block}")
     block_hash = '111111'
     while not block_hash[:6] == '000000':
+        input(f"block is {block}")
         block_hash  = hash(block_to_JSON(block).encode())
-        input(f"json {block_to_JSON(block)}")
         print(f"{block_hash} at nonce {block['nonce']}")
         block['nonce'] += 1
         input(f"block is {block}")
