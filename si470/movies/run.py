@@ -14,7 +14,7 @@ sys.path.append("C:\classes")
 sys.path.append("D:\classes")
 sys.path.append("/mnt/d/classes")
 sys.path.append("/home/mids/m226252/classes")
-
+sys.path.append("/Users/josh/Desktop/Code/SI470/grad/classes/")
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 sys.stderr = sys.stdout
 
@@ -24,6 +24,7 @@ from Toolchain.gputools import *
 
 # Make err handling nicer
 printc(f"Num GPUs Available: {len(tf.config.list_physical_devices('GPU'))}\n",GREEN)
+
 #tf.config.run_functions_eagerly(True)
 import signal
 def handler(signum, frame):
@@ -56,11 +57,11 @@ class ExecuteJob:
 
     def prepare_data(self):
         self.datasets = {    'small'     :  {'movies'        : join('ml-latest-small','movies.csv') , 'ratings' : join("ml-latest-small","ratings.csv") , 'tags' : join("ml-latest-small","tags.csv")},
-                        'large'     :  {'movies'        : join("ml-latest","movies.csv")       , 'ratings' : load_from[self.input_source]       , 'tags' : join('ml-latest',"tags.csv")},
-                        'usna'      :  {'foodMovies'   : 'foodAndMovies.csv'}}                                #join("ml-latest","ratings.csv")
+                             'large'     :  {'movies'        : join("ml-latest","movies.csv")       , 'ratings' : load_from[self.input_source]       , 'tags' : join('ml-latest',"tags.csv")},
+                             'usna'      :  {'foodMovies'   : 'foodAndMovies.csv'}}                                #join("ml-latest","ratings.csv")
 
         self.dataframes= {   'small'     :  {'movies'        : None, 'ratings' :  None, 'tags' : None},
-                        'large'     :  {'movies'        : None, 'ratings' :  None, 'tags' : None}}
+                             'large'     :  {'movies'        : None, 'ratings' :  None, 'tags' : None}}
 
 
         self.headers = ["Black Panther","Pitch Perfect","Star Wars: The Last Jedi","It","The Big Sick","Lady Bird","Pirates of the Caribbean","Despicable Me","Coco","John Wick","Mamma Mia","Crazy Rich Asians","Three Billboards Outside Ebbings, Missouri","The Incredibles"]
@@ -108,6 +109,7 @@ class ExecuteJob:
         self.movieId_to_name = {}
         self.col_to_movieId = {}
         i = 0
+
         with open(self.datasets['large']['movies'],'r',encoding='utf-8') as file:
             file.readline()
             for line in file:
@@ -139,6 +141,8 @@ class ExecuteJob:
         printc(f"{BLUE}number of movies:      {END}  "   +   \
                     f"{self.n_movies}                                 \n\n",TAN)
 
+
+    # Not used
     def create_init_tensors(self):
         printc(f"Building Index and Value Tensors\n\n",GREEN)
         t1 = time()
@@ -153,7 +157,7 @@ class ExecuteJob:
         # Info
         printc(f"\tFinished Tensor build in\t{(time()-t1):.3f} seconds",GREEN)
         printc(f"\tindices:\t{self.indices.shape}\n\tvalues  : {self.values.shape}",GREEN)
-
+    # mpt ised
     def create_sparse_matrix(self):
         # Create indexing matrices
         matrix_x        = tf.convert_to_tensor(self.ratings['userId'].apply(lambda x : x - 1),  dtype=self.i_64)
@@ -168,6 +172,8 @@ class ExecuteJob:
         self.matrix      = tf.sparse.reorder(tf.sparse.SparseTensor(indices=self.indices,values=self.values,dense_shape = [self.n_movies,self.n_users]))
         printc(f"{type(self.matrix)} SHAPE OF: {self.matrix.shape}",GREEN)
 
+
+    # This is where all the work happens
     def create_reduced_dense_matrix(self,n,alg='randomized',iters=5,filename=''):
 
         importing = not (filename == '')
@@ -178,6 +184,7 @@ class ExecuteJob:
         if not importing:
     # Build sparse matrix
             fname = f"SVD_DECOMP{n}.npy"
+
             rows = self.ratings['movieId'].apply(lambda x : self.movieId_to_col[x])
             cols =  self.ratings['userId']-1
 
@@ -194,24 +201,26 @@ class ExecuteJob:
             t3 = time()
             np.save(fname,dense_reduced)
             printc(f"\tcreated svd in {RED}{(t3-t2):.3f}{TAN} seconds",TAN)
+
+
         else:
             printc(f"\timporting reduced from: {filename}",TAN)
             dense_reduced = np.load(filename)
     # Final matrix result
         t3 = time()
         self.n_users = n
+
         self.matrix = tf.convert_to_tensor(dense_reduced,dtype=self.f_64)
         # LOGGING
         t4 = time()
         printc(f"\tcreated tensor in {RED}{(t4-t3):.3f}{TAN} seconds",TAN)
 
+    # NOt used
     def belongs_in_list(self,dist):
         return (dist < self.closest_movies[self.checkId]['distance']) and not (self.currentId == self.checkId)
-
     def place_in_list(self,dist):
         self.closest_movies[self.checkId]['distance'] = dist
         self.closest_movies[self.checkId]['movie']    = self.currentId
-
     def helper_func(self,row_slice):
         row_slice = tf.sparse.reorder(row_slice)
         # Convert to dense matrix and find distance to movie we are predicting for
@@ -227,6 +236,8 @@ class ExecuteJob:
         if self.currentId == 0:
             input("made it through a row!",GREEN)
         return distance
+
+
 
     def euclidean_caller(self,A):
         return euclidean_distance(A,self.B)

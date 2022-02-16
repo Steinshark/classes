@@ -173,7 +173,7 @@ class Node:
 
             # If their server isn't up, then forget it
             except ConnectionException:
-                break
+                return
 
             if not stack:
                 return
@@ -195,7 +195,7 @@ class Node:
 
                 # If their server isn't up, then forget it
                 except ConnectionException:
-                    break
+                    return
 
                 # If this block worked, head back up the stack
                 # (this is super inefficient I realize, but I
@@ -211,13 +211,13 @@ class Node:
 
 
 if __name__ == "__main__":
+    n = Node()
     try:
         if sys.argv[1] == 'c':
-            n = Node()
             send_chat(input("msg: "), "fox", 5002)
             n.update_peers()
     except IndexError:
         msg = input("msg: ")
         host = input("host: ")
         port = 5002
-        self.update_peers()
+        n.update_peers()

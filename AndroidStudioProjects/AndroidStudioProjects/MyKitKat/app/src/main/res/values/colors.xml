@@ -1,13 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
+
+<!-- ALl colors are fairly self explanatory-->
 <resources>
     <color name="purple_200">#FFBB86FC</color>
     <color name="purple_500">#FF6200EE</color>
     <color name="purple_700">#FF3700B3</color>
     <color name="teal_200">#FF03DAC5</color>
     <color name="teal_700">#FF018786</color>
-    <color name="black">#FF000000</color>
-    <color name="darkGray">#FF32322F</color>
-    <color name="lightGray">#FF52524F</color>
 
+    <!-- Actually used-->
     <color name="white">#FFFFFFFF</color>
+    <color name="darkGray">#3d3d3d</color>
+    <color name="darkerGray">#2d2d2d</color>
+    <color name="lightGray">#c3c3c3</color>
+    <color name="orange">#f59b42</color>
+    <color name="black">#FF000000</color>
 </resources>
