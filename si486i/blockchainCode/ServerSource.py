@@ -249,7 +249,7 @@ class DynamicServer:
             # Update as necessary
             if hash_len[hash] > self.longest_chain:
                 self.longest_chain  = hash_len[block_hash]
-                self.head_hash      = hash
+                self.head_hash      = block_hash
 
         # Info
         printc(f"\t\tFound {len(possible_hashes)} chains",TAN)
