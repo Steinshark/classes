@@ -11,7 +11,7 @@ CHECKPOINT_FILE = 'cache/current.json'
 
 
 class FetchService:
-    def __init__(self,host=None,port=-1):
+    def __init__(self,host=None,port=-1,version=1):
         if (not host == None) and (not port == -1):
             self.host = host
             self.port = port
@@ -20,7 +20,7 @@ class FetchService:
             self.port = self.args.port
         self.blockchain_check = True
         self.last_hash = ''
-
+        self.version = 1
     def format_parser(self):
         self.parser = argparse.ArgumentParser(description='Specify your own hostname and port',prefix_chars='-')
         self.parser.add_argument('--host',metavar='host',required=False, type=str,help='specify a hostname',default="http://cat")
@@ -41,7 +41,7 @@ class FetchService:
     def fetch_blockchain(self,writing=True):
         try:
             # Download the blockchain and get info
-            self.blockchain_download = get_blockchain(self.host,self.port,caching=True,last_verified=self.last_hash)
+            self.blockchain_download = get_blockchain(self.host,self.port,caching=True,last_verified=self.last_hash,version=self.version)
             blockchain_len = len(self.blockchain_download)
             head_hash = self.blockchain_download[0][0]
 

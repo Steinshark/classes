@@ -80,7 +80,7 @@ class Node:
             # Attempt to fetch the blockchain of that node
             try:
                 # Grab the blockchain
-                node_fetcher = FetchService(host=host,port=5002)
+                node_fetcher = FetchService(host=host,port=5002,version=1)
                 node_fetcher.fetch_blockchain()
 
                 # Assign the fetcher to the node
