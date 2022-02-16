@@ -77,7 +77,7 @@ def build_block(prev_hash,payload,ver):
         new_block = mine_block(new_block)
 
     try:
-        encoded_block = dumps(mined_block)
+        encoded_block = dumps(new_block)
         return encoded_block
     except JSONEncodeException as j:
         raise BlockCreationException(j)
