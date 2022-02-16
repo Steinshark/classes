@@ -72,8 +72,12 @@ def build_block(prev_hash,payload,ver):
     new_block = {   'prev_hash'     : prev_hash,
                     'payload'       : payload,
                     'version'       : ver}
+    if ver == 1:
+        new_block['nonce'] = 0
+        mined_block = mine_block(new_block)
+
     try:
-        encoded_block = dumps(new_block)
+        encoded_block = dumps(mined_block)
         return encoded_block
     except JSONEncodeException as j:
         raise BlockCreationException(j)
@@ -184,3 +188,11 @@ def send_chat(msg,host,port):
     except TypeError as t:
         printc(t,RED)
         printc(f"\tRecieved Null response...",TAN)
+
+
+def mine_block(block):
+    block_hash = '111111'
+    while not block_hash[:6] == '000000':
+        block_hash  = hash(block_to_JSON(block).encode())
+        block['nonce'] += 1
+        print(f"{block_hash} - {nonce}")
