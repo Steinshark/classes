@@ -22,7 +22,7 @@ except ModuleNotFoundError:
 #########################################################################################
 
 # Make a request to where the head hash should be
-def retrieve_head_sha_256_hash(host="cat",port="5000",timeout=3):
+def retrieve_head_hash(host="cat",port="5000",timeout=3):
     url = f"http://{host}:{port}/head"
 
     try:
@@ -196,7 +196,7 @@ def mine_block(block):
     block_hash = '111111'
     while not block_hash[:6] == '000000':
         input(f"block is {block}")
-        block_hash  = sha_256_hash(block_to_JSON(block).encode())
+        block_hash  = BlockchainUtilities.sha_256_hash(block_to_JSON(block).encode())
         print(f"{block_hash} at nonce {block['nonce']}")
         block['nonce'] += 1
         input(f"block is {block}")
