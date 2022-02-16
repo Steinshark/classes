@@ -226,8 +226,8 @@ class DynamicServer:
         hash_len                = {}                    # maps chains to their length
 
         # Get all hashes found in 'cache' and map them to their prev_hash
-        for hash in grab_cached_hashes():
-                with open(f"cache/{hash}.json",'r') as f:
+        for block_hash in grab_cached_hashes():
+                with open(f"cache/{block_hash}.json",'r') as f:
                     prev_hash = loads(f.read().strip())['prev_hash']
                     hashes_to_prev_hash[hash] = prev_hash
 
@@ -243,12 +243,12 @@ class DynamicServer:
         self.head_hash = ''
 
         # Find the longest chain
-        for hash in possible_hashes:
-            hash_len[hash] = iter_local_chain(hash)     # Runs through and grabs length of chain starting from 'hash'
+        for block_hash in possible_hashes:
+            hash_len[block_hash] = iter_local_chain(block_hash)     # Runs through and grabs length of chain starting from 'hash'
 
             # Update as necessary
             if hash_len[hash] > self.longest_chain:
-                self.longest_chain  = hash_len[hash]
+                self.longest_chain  = hash_len[block_hash]
                 self.head_hash      = hash
 
         # Info
@@ -459,10 +459,10 @@ class VersionOneServer:
         hash_len                = {}                    # maps chains to their length
 
         # Get all hashes found in 'cache' and map them to their prev_hash
-        for hash in possible_hashes:
+        for block_hash in possible_hashes:
                 with open(f"cache/{hash}.json",'r') as f:
                     prev_hash = loads(f.read().strip())['prev_hash']
-                    hashes_to_prev_hash[hash] = prev_hash
+                    hashes_to_prev_hash[block_hash] = prev_hash
 
         # From possible_hashes, remove all hashes that appeared as a prev_hash
         # This means that they are not the head of a chain
@@ -476,13 +476,13 @@ class VersionOneServer:
         self.head_hash = ''
 
         # Find the longest chain
-        for hash in possible_hashes:
+        for block_hash in possible_hashes:
             hash_len[hash] = iter_local_chain(hash)     # Runs through and grabs length of chain starting from 'hash'
 
             # Update as necessary
             if hash_len[hash] > self.longest_chain:
                 self.longest_chain  = hash_len[hash]
-                self.head_hash      = hash
+                self.head_hash      = block_hash
 
         # Info
         printc(f"\t\tFound {len(possible_hashes)} chains",TAN)

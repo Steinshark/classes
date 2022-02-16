@@ -122,7 +122,7 @@ class Node:
         stack = []
 
         # Try pushing blocks until we peer accepts one
-        for (hash,block) in full_blockchain:
+        for (block_hash,block) in full_blockchain:
 
             # Create the payload
             payload = {'block' : block_to_JSON(block)}
@@ -184,7 +184,7 @@ class Node:
    # NEED TO FIX
         else:
             # Iteratively try to push each block in the blockchain
-            for (hash,block) in full_blockchain:
+            for (block_hash,block) in full_blockchain:
 
                 # Create the payload
                 payload = {'block' : block_to_JSON(block)}
@@ -204,7 +204,7 @@ class Node:
                     self.update_peer_node_iterative(peer,stack,full_blockchain,True)
                     printc(f"Block accepted! Trying next block in current chain",GREEN)
                 else:
-                    printc(f"{hash[:5]}->{return_code},  ",TAN,endl='')
+                    printc(f"{block_hash[:5]}->{return_code},  ",TAN,endl='')
                     continue
 
         printc(f"Finished trying to push chain",TAN)
