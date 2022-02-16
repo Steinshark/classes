@@ -163,11 +163,11 @@ def check_fields(block,allowed_versions=[0],allowed_hashes=[''],trust=False):
         return False
 
     # Ensure Ver1 blocks have a nonce
-    elif (block['version'] == 1) and
+    elif (block['version'] == 1) and\
          (not 'nonce' in block):
         return False
-        
-    elif (block['verison' == 1]) and
+
+    elif (block['verison' == 1]) and\
          (not hash(loads(block).encode())[:6] == '000000'):
         return False
 
