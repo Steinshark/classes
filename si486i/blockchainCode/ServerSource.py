@@ -115,6 +115,7 @@ class DynamicServer:
 
         @self.app.route('/head')
         def head():
+            pp(self.all_chains)
 
             # Some simple debug code
             printc(f"\thead requested, sending {self.head_hash[:10]}",TAN)
