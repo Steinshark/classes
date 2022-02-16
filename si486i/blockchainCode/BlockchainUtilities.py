@@ -88,7 +88,7 @@ def get_blockchain(hostname='cat',port='5000',caching=False,cache_location='cach
                     flock(file,LOCK_UN)
         else:
             raise BlockChainVerifyError(f"{Color.RED}bad block at position {index}{Color.END}")
-        block_hash = retrieve_prev_hash(block)
+        block_hash = block['prev_hash']
 
 
     return blockchain
