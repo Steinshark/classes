@@ -21,6 +21,13 @@ except ModuleNotFoundError:
 ############################ FUNCTIONS FOR PROCESSING BLOCKS ############################
 #########################################################################################
 
+# hash function wrapper
+def sha_256_hash(bytes):
+    hasher = sha3_256()
+    hasher.update(bytes)
+    digest = hasher.digest()
+    return digest.hex()
+
 # Make a request to where the head hash should be
 def retrieve_head_hash(host="cat",port="5000",timeout=3):
     url = f"http://{host}:{port}/head"
