@@ -204,8 +204,8 @@ def send_chat(msg,host,port,version=0):
 def mine_block(block):
     block_hash = '111111'
     while not block_hash[:6] == '000000':
-        block_hash  = sha_256_hash(block_to_JSON(block).encode())
         block['nonce'] += 1
+        block_hash  = sha_256_hash(block_to_JSON(block).encode())
     input(f"found block {block}")
     input(f"kicking back block with hash {sha_256_hash(block_to_JSON(block).encode())}")
     return block
