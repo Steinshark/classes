@@ -211,9 +211,9 @@ class Node:
 
 
 if __name__ == "__main__":
+    n = Node()
     try:
         if sys.argv[1] == 'c':
-            n = Node()
             send_chat(input("msg: "), "fox", 5002)
             n.update_peers()
     except IndexError:
