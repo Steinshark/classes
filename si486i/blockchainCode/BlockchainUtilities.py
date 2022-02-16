@@ -62,6 +62,8 @@ def get_blockchain(hostname='cat',port='5000',caching=False,cache_location='cach
             with open(block_filename, 'r') as file:
                 flock(file,LOCK_SH)
                 block = loads(file.read())
+                flock(file,LOCK_UN)
+
         else:
             try:
                 block = retrieve_block(block_hash,host=hostname,port=port)
