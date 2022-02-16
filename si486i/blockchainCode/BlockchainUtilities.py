@@ -75,7 +75,7 @@ def get_blockchain(hostname='cat',port='5000',caching=False,cache_location='cach
             print(h)
             raise BlockChainError(h)
 
-        check = check_fields(block,allowed_versions=[version],allowed_hashes=['',hashed_to],trust=trust)
+        check = check_fields(block,allowed_versions=[version],allowed_hashes=['',hashed_to],trust=False)
 
         if check:
             # add it to the chain
