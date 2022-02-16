@@ -163,7 +163,7 @@ def check_fields(block,allowed_versions=[0],allowed_hashes=[''],trust=False):
     return True
 
 # Sends a block containing 'msg' to 'host' on 'port'
-def send_chat(msg,host,port):
+def send_chat(msg,host,port,version=0):
     #Specify all the URLs
     URL = { 'head' : f"http://{host}:{port}/head",
             'push' : f"http://{host}:{port}/push"}
@@ -172,7 +172,7 @@ def send_chat(msg,host,port):
     head_hash = get(URL['head']).content.decode()
     print(f"received {head_hash}")
     # Create the block
-    json_encoded_block = build_block(head_hash,{'chat' : msg},0)
+    json_encoded_block = build_block(head_hash,{'chat' : msg},version)
 
     # Build format to send over HTTP
     push_data = {'block' : json_encoded_block}
