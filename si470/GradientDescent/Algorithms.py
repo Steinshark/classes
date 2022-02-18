@@ -2,7 +2,7 @@ import os
 import tensorflow as tf
 import numpy as np
 import math
-
+from time import time
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
@@ -28,24 +28,54 @@ def GradientDescent(A,filter,dim=10,alpha=.1,iters=1000):
     rows    = A.shape[1]
 
     # Create the P and Q matrices
-    p       = tf.random.uniform(shape = [cols,dim],dtype=tf.dtypes.float32)
-    q       = tf.random.uniform(shape = [dim,rows],dtype=tf.dtypes.float32)
+    p       = tf.random.uniform(shape = [cols,dim],maxval=5,dtype=tf.dtypes.float32)
+    q       = tf.random.uniform(shape = [dim,rows],maxval=5,dtype=tf.dtypes.float32)
+
+
 
     for i in range(iters):
+        # precompute
         pq      = tf.matmul(p,q)
-        A_pq   = tf.math.subtract(A,pq)
+        A_pq    = tf.math.subtract(A,pq)
+        err_sum = 0
+        print(f"starting ({rows},{cols})")
+        for i in range(rows):
+            t1 = time()
+            print(f"{i}")
 
-        # Calculate new p and q
-        additional_p = tf.math.subtract(tf.transpose(q), A_pq) 
-        new_p      = tf.math.add(p,    tf.math.multiply(    tf.math.multiply(  (2.0 * alpha), tf.transpose(q)),  A_pq))
-        new_q      = tf.math.add(p,    tf.math.multiply(    tf.math.multiply(  (2.0 * alpha), tf.transpose(p)),  A_pq))
+            # precompute constants
+            p_slice = p[i]
+            const = 2.0 * alpha
 
-        p = new_p
-        q = new_q
+            for j in range(cols-1):
 
-        input(RMSE(A,filter,p,q))
+                # Dont compute for nan values
+                if not filter[j][i]:
+                    continue
+
+                error       = A_pq[j][i]
+
+                q_slice = update_val(error,alpha,q,j)
+
+                #print(p_slice)
+                #input(q_slice)
+            print(f"finished an col in {time()-t1}")
+
+        ## Calculate new p and q
+        #additional_p = tf.math.subtract(tf.transpose(q), A_pq)
+        #new_p      = tf.math.add(p,    tf.math.multiply(    tf.math.multiply(  (2.0 * alpha), tf.transpose(q)),  A_pq))
+        #new_q      = tf.math.add(p,    tf.math.multiply(    tf.math.multiply(  (2.0 * alpha), tf.transpose(p)),  A_pq))
+
+        #p = new_p
+        #q = new_q
+
+        #input(RMSE(A,filter,p,q))
     return p_init,q_init
 
+@tf.function
+def update_val(err,alpha,q,j):
+
+    return tf.math.multiply(    tf.transpose(tf.gather(q,[j],axis=1)),  tf.math.multiply(alpha,err))
 # A is assumed to be the Sparse Matrix of Ratings with many holes
 def RMSE(A, filter,p,q):
 
