@@ -3,7 +3,8 @@ import pandas as pd
 import numpy as np
 import os
 import Algorithms
-
+from terminal import *
+from time import time
 #TYPES
 _f32            = tf.dtypes.float32
 
@@ -39,6 +40,9 @@ def fill(df,method):
 
 
 def read_data():
+    printc(f"\tReading data",BLUE)
+    t1 = time()
+
     # Read 'ratings.csv' into a DataFrame from the small set
     small_ratings   = pd.read_csv(  _RATINGS_SMALL,
                                     dtype = {   'userId'    :   np.float32,
@@ -56,7 +60,6 @@ def read_data():
     for row, id in enumerate(small_movie_ids['movieId']):
         _MOVIE_ID_MAP[row]  = id
         _ROW_MAP[id]        = row
-
     #info
     # Fill with our choice
     fill(small_ratings_matrix,'zero')
@@ -68,6 +71,7 @@ def read_data():
     partial_ratings_filter  = tf.sparse.to_dense(tf.sparse.map_values(tf.ones_like,tf.sparse.from_dense(partial_ratings_tensor)))
     partial_ratings_filter  = tf.cast(partial_ratings_filter, dtype=_f32)
 
+    printc(f"\tRead data in {(time()-t1):.3f} seconds",GREEN)
     return partial_ratings_tensor, partial_ratings_filter
 
 ratings, filter = read_data()

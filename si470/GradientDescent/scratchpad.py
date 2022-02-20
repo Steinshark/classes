@@ -1,4 +1,6 @@
 import tensorflow as tf
+from terminal import *
+
 f32 = tf.dtypes.float32
 
 holes =

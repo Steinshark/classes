@@ -3,75 +3,51 @@ import tensorflow as tf
 import numpy as np
 import math
 from time import time
+from terminal import *
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
-
-
-# Filters pq to only hold values that exist in the original ratings matrix
-# Filter is in form:
-
-#           [ 0  1  0  0  1 ]
-#           [ 0  1  0  1  0 ]
-#           [ 1  0  1  0  1 ]
-
-# Where 1 held a rating in the original dataset
 def map_to_existing(pq, filter):
     res = tf.math.multiply(pq,filter)
     input(res)
     return tf.math.multiply(pq,filter)
 
 
-def GradientDescent(A,filter,dim=10,alpha=.1,iters=1000):
-
+def GradientDescent(A,filter,dim=10,alpha=.1,iters=1):
+    printc(f"\tentered GradientDescent algorithm",TAN)
     # Ascertain what dimensions we are in
-    cols    = A.shape[0]
-    rows    = A.shape[1]
-
+    rows    = A.shape[0]
+    cols    = A.shape[1]
     # Create the P and Q matrices
-    p       = tf.Variable(tf.random.uniform(shape = [cols,dim],dtype=tf.dtypes.float32))
-    q       = tf.Variable(tf.random.uniform(shape = [dim,rows],dtype=tf.dtypes.float32))
+    p       = tf.Variable(tf.random.uniform(shape = [rows,dim],dtype=tf.dtypes.float32))
+    q       = tf.Variable(tf.random.uniform(shape = [dim,cols],dtype=tf.dtypes.float32))
 
     const   = alpha * 2.0
-    for i in range(iters):
+    for iter in range(iters):
 
 
-        for j in range(cols-1):
-
-
-            for i in range(rows-1):
-                print(f"on [{i}]["j"]")
+        for j in range(cols):
+            t1 = time()
+            print(f"start col {j}")
+            for i in range(rows):
+                if not filter[i][j]:
+                    continue
                 # get q col and p row
-                q_j = q[:j]
+                q_j = q[:,j]
                 p_i = p[i]
 
+
                 # find the err present
-                err = tf.math.subtract(A,tf.math.multiply(q_j, p_i))
+                err = tf.math.subtract(A[i][j],tf.math.multiply(q_j, p_i))
 
                 # find where to nudge down the gradient
-                nudge       = tf.math.multiply(err,const)
+                nudge = tf.math.multiply(err,const)
 
                 # update p and q vals
                 p[i].assign(p_i + tf.math.multiply(q_j,nudge))
-                q[:j].assign(q_j + tf.math.multiply(p_i,nudge))
-                input(p)
-                input(q)
+                q[:,j].assign(q_j + tf.math.multiply(p_i,nudge))
 
-                q_slice = update_val(error,alpha,q,j)
-
-                #print(p_slice)
-                #input(q_slice)
-            print(f"finished an col in {time()-t1}")
-
-        ## Calculate new p and q
-        #additional_p = tf.math.subtract(tf.transpose(q), A_pq)
-        #new_p      = tf.math.add(p,    tf.math.multiply(    tf.math.multiply(  (2.0 * alpha), tf.transpose(q)),  A_pq))
-        #new_q      = tf.math.add(p,    tf.math.multiply(    tf.math.multiply(  (2.0 * alpha), tf.transpose(p)),  A_pq))
-
-        #p = new_p
-        #q = new_q
-
-        #input(RMSE(A,filter,p,q))
-    return p_init,q_init
+    return p,q
 
 @tf.function
 def update_val(err,alpha,q,j):
@@ -102,4 +78,5 @@ if __name__ == "__main__":
     print(f"A:\n{a}\n\n")
     p,q = GradientDescent(a)
     err = RMSE(a,p,q)
+
     print({f"ERROR: {err}"})
