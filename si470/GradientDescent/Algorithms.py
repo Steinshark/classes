@@ -28,32 +28,33 @@ def GradientDescent(A,filter,dim=10,alpha=.1,iters=1000):
     rows    = A.shape[1]
 
     # Create the P and Q matrices
-    p       = tf.random.uniform(shape = [cols,dim],maxval=5,dtype=tf.dtypes.float32)
-    q       = tf.random.uniform(shape = [dim,rows],maxval=5,dtype=tf.dtypes.float32)
+    p       = tf.Variable(tf.random.uniform(shape = [cols,dim],dtype=tf.dtypes.float32))
+    q       = tf.Variable(tf.random.uniform(shape = [dim,rows],dtype=tf.dtypes.float32))
 
-
-
+    const   = alpha * 2.0
     for i in range(iters):
-        # precompute
-        pq      = tf.matmul(p,q)
-        A_pq    = tf.math.subtract(A,pq)
-        err_sum = 0
-        print(f"starting ({rows},{cols})")
-        for i in range(rows):
-            t1 = time()
-            print(f"{i}")
 
-            # precompute constants
-            p_slice = p[i]
-            const = 2.0 * alpha
 
-            for j in range(cols-1):
+        for j in range(cols-1):
 
-                # Dont compute for nan values
-                if not filter[j][i]:
-                    continue
 
-                error       = A_pq[j][i]
+            for i in range(rows-1):
+                print(f"on [{i}]["j"]")
+                # get q col and p row
+                q_j = q[:j]
+                p_i = p[i]
+
+                # find the err present
+                err = tf.math.subtract(A,tf.math.multiply(q_j, p_i))
+
+                # find where to nudge down the gradient
+                nudge       = tf.math.multiply(err,const)
+
+                # update p and q vals
+                p[i].assign(p_i + tf.math.multiply(q_j,nudge))
+                q[:j].assign(q_j + tf.math.multiply(p_i,nudge))
+                input(p)
+                input(q)
 
                 q_slice = update_val(error,alpha,q,j)
 
