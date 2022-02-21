@@ -5,9 +5,12 @@ import os
 import Algorithms
 from terminal import *
 from time import time
+
+tf.config.run_functions_eagerly(True)
+
 #TYPES
 _f32            = tf.dtypes.float32
-
+_i32            = tf.dtypes.int32
 #DATASET LOCATIONS
 _RATINGS_SMALL  = os.path.join("ml-latest-small","ratings.csv")
 _MOVIE_ID_SMALL = os.path.join("ml-latest-small","movies.csv")
@@ -74,5 +77,32 @@ def read_data():
     printc(f"\tRead data in {(time()-t1):.3f} seconds",GREEN)
     return partial_ratings_tensor, partial_ratings_filter
 
-ratings, filter = read_data()
-Algorithms.GradientDescent(ratings,filter,dim=10)
+ratings, filter_matrix = read_data()
+
+alphas = [1,.5,.1,.01] 
+iter_val = np.arange(0,10000,2000)
+
+
+
+runs = {a : { test : [] for test in iter_val } for a in alphas}
+colors = {1 : 'b',.5 : 'g',.1 : 'r',.01 : 'm' }
+
+
+for a in alphas:
+    for test_val in iter_val:
+
+        t1 = time()
+        p,q = Algorithms.GradientDescent_optimized(ratings,filter_matrix,dim=7,iters=test_val,alpha = a)
+        runs[a][test_val].append(time()-t1)
+        runs[a][test_val].append(Algorithms.RMSE(ratings,filter_matrix,p,q))
+
+from matplotlib import pyplot as plt 
+
+
+fix, ax = plt.subplots(len(alphas))
+
+for i,a in enumerate(runs):
+    for x in runs[a]:
+        ax[i].scatter(x,times[a], color=colors[a])
+        ax[i].scatter(x,rmses[a], color=colors[a])
+plt.show()

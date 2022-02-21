@@ -9,15 +9,16 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 def map_to_existing(pq, filter):
     res = tf.math.multiply(pq,filter)
-    input(res)
     return tf.math.multiply(pq,filter)
 
 
-def GradientDescent(A,filter,dim=10,alpha=.1,iters=1):
+def GradientDescent(A,filter_matrix,dim=10,alpha=.1,iters=1):
     printc(f"\tentered GradientDescent algorithm",TAN)
+
     # Ascertain what dimensions we are in
     rows    = A.shape[0]
     cols    = A.shape[1]
+
     # Create the P and Q matrices
     p       = tf.Variable(tf.random.uniform(shape = [rows,dim],dtype=tf.dtypes.float32))
     q       = tf.Variable(tf.random.uniform(shape = [dim,cols],dtype=tf.dtypes.float32))
@@ -28,7 +29,7 @@ def GradientDescent(A,filter,dim=10,alpha=.1,iters=1):
 
         for j in range(cols):
             t1 = time()
-            print(f"start col {j}")
+            printc(f"\t\tstart col {j}",TAN,endl='')
             for i in range(rows):
                 if not filter[i][j]:
                     continue
@@ -46,13 +47,63 @@ def GradientDescent(A,filter,dim=10,alpha=.1,iters=1):
                 # update p and q vals
                 p[i].assign(p_i + tf.math.multiply(q_j,nudge))
                 q[:,j].assign(q_j + tf.math.multiply(p_i,nudge))
+            printc(f" in {time()-t1} seconds",TAN)
 
     return p,q
 
 @tf.function
+def GradientDescent_optimized(A,filter_matrix,dim=10,alpha=.1,iters=1):
+    printc(f"entered GradientDescent algorithm",TAN)
+
+    # Ascertain what dimensions we are in
+    rows    = tf.Variable(A.shape[0],dtype=tf.dtypes.int32)
+    cols    = tf.Variable(A.shape[1],dtype=tf.dtypes.int32)
+
+    # Create the P and Q matrices
+    p       = tf.Variable(tf.random.uniform(shape = [rows,dim],dtype=tf.dtypes.float32))
+    q       = tf.Variable(tf.random.uniform(shape = [dim,cols],dtype=tf.dtypes.float32))
+
+
+    # init the constants for a loop
+    i = tf.Variable(0,dtype=tf.dtypes.int32) 
+    j = tf.Variable(0,dtype=tf.dtypes.int32) 
+
+    # Run 'iter' times 
+    for iter in range(iters):
+
+        # iter through cols 
+        while tf.less(j, cols):
+
+            # iter through rows 
+            while tf.less(i, rows):
+
+                # skip if 0
+                if tf.equal(0,filter_matrix[i][j]):
+                    i.assign_add(1)
+                    continue
+
+                # get q col and p row
+                q_j = q[:,j]
+                p_i = p[i]
+                # find the err present
+                err = tf.math.subtract(A[i][j],tf.tensordot(q_j,p_i,axes=1))
+                # find where to nudge down the gradient
+                nudge = tf.math.multiply(err,alpha)
+                # update p and q vals
+                p[i].assign  (tf.math.add(  p_i,    tf.math.multiply(q_j,nudge)))
+                q[:,j].assign(tf.math.add(  q_j,    tf.math.multiply(p_i,nudge)))
+
+                i.assign_add(1)
+            j.assign_add(1)
+
+
+    return p,q
+  
+@tf.function
 def update_val(err,alpha,q,j):
 
     return tf.math.multiply(    tf.transpose(tf.gather(q,[j],axis=1)),  tf.math.multiply(alpha,err))
+
 # A is assumed to be the Sparse Matrix of Ratings with many holes
 def RMSE(A, filter,p,q):
 
@@ -65,6 +116,7 @@ def RMSE(A, filter,p,q):
     # Find distances squared from A
     A_pq = tf.math.subtract(A,pq)
     A_pq_square = tf.square(A_pq)
+
 
     # Find sum of distances
     sum = tf.reduce_sum(A_pq_square)
