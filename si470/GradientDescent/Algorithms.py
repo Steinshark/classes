@@ -12,16 +12,8 @@ def map_to_existing(pq, filter):
     return tf.math.multiply(pq,filter)
 
 
-def GradientDescent(A,filter_matrix,dim=10,alpha=.1,iters=1):
+def GradientDescent(A,p,q,filter_matrix,dim=10,alpha=.1,iters=1):
     printc(f"\tentered GradientDescent algorithm",TAN)
-
-    # Ascertain what dimensions we are in
-    rows    = A.shape[0]
-    cols    = A.shape[1]
-
-    # Create the P and Q matrices
-    p       = tf.Variable(tf.random.uniform(shape = [rows,dim],dtype=tf.dtypes.float32))
-    q       = tf.Variable(tf.random.uniform(shape = [dim,cols],dtype=tf.dtypes.float32))
 
     const   = alpha * 2.0
     for iter in range(iters):
@@ -53,24 +45,21 @@ def GradientDescent(A,filter_matrix,dim=10,alpha=.1,iters=1):
 
 @tf.function
 def GradientDescent_optimized(A,filter_matrix,dim=10,alpha=.1,iters=1):
-    printc(f"entered GradientDescent algorithm",TAN)
-
     # Ascertain what dimensions we are in
     rows    = tf.Variable(A.shape[0],dtype=tf.dtypes.int32)
     cols    = tf.Variable(A.shape[1],dtype=tf.dtypes.int32)
-
     # Create the P and Q matrices
     p       = tf.Variable(tf.random.uniform(shape = [rows,dim],dtype=tf.dtypes.float32))
     q       = tf.Variable(tf.random.uniform(shape = [dim,cols],dtype=tf.dtypes.float32))
 
-
     # init the constants for a loop
     i = tf.Variable(0,dtype=tf.dtypes.int32) 
     j = tf.Variable(0,dtype=tf.dtypes.int32) 
+    iteration = tf.Variable(0,dtype=tf.dtypes.int32)
 
     # Run 'iter' times 
-    for iter in range(iters):
-
+    while tf.less(iteration,iters):
+        iteration.assign_add(1)
         # iter through cols 
         while tf.less(j, cols):
 
@@ -85,10 +74,13 @@ def GradientDescent_optimized(A,filter_matrix,dim=10,alpha=.1,iters=1):
                 # get q col and p row
                 q_j = q[:,j]
                 p_i = p[i]
+
                 # find the err present
                 err = tf.math.subtract(A[i][j],tf.tensordot(q_j,p_i,axes=1))
+
                 # find where to nudge down the gradient
                 nudge = tf.math.multiply(err,alpha)
+                
                 # update p and q vals
                 p[i].assign  (tf.math.add(  p_i,    tf.math.multiply(q_j,nudge)))
                 q[:,j].assign(tf.math.add(  q_j,    tf.math.multiply(p_i,nudge)))

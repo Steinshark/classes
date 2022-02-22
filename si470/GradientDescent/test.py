@@ -6,6 +6,8 @@ import Algorithms
 from terminal import *
 from time import time
 
+# For s**ts and giggles 
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 tf.config.run_functions_eagerly(True)
 
 #TYPES
@@ -78,31 +80,44 @@ def read_data():
     return partial_ratings_tensor, partial_ratings_filter
 
 ratings, filter_matrix = read_data()
+# Ascertain what dimensions we are in
+rows    = tf.Variable(ratings.shape[0],dtype=tf.dtypes.int32)
+cols    = tf.Variable(ratings.shape[1],dtype=tf.dtypes.int32)
 
-alphas = [1,.5,.1,.01] 
-iter_val = np.arange(0,10000,2000)
+alphas = [.001,.0001,.00001,.000001] 
+iter_val = [100,1000,5000,10000,100000]
+dimensions = [40,50,70,100]
 
 
+runs =      {a : { d : {'time' : [], 'rmse' : []} for d in dimensions} for a in alphas}
+colors =    {.00001 : 'k', .5 : 'g', .000001 : 'r', .05 : 'm', .01 : 'c', .001 : 'b', .0001 : 'y'}
 
-runs = {a : { test : [] for test in iter_val } for a in alphas}
-colors = {1 : 'b',.5 : 'g',.1 : 'r',.01 : 'm' }
+for d in dimensions:
+    printc(f"\nDIMENSION: {d}",BLUE)
+    for a in alphas:
+        printc(f"\nGathering data for alpha = {a}\n\titer= ",TAN,endl='')
+        for test_val in iter_val:
+            lowest_score = 100000000
+            t1 = time()
+            for i in range(30):
+                p,q = Algorithms.GradientDescent_optimized(ratings,filter_matrix,dim=d,iters=test_val,alpha = a)
+                run_err = Algorithms.RMSE(ratings,filter_matrix,p,q)
+                if run_err < lowest_score:
+                    lowest_score = run_err
+            printc(f" {test_val}:{(time()-t1):.2f}  ",TAN,endl='')
+            runs[a][d]['rmse'].append(lowest_score)
 
 
-for a in alphas:
-    for test_val in iter_val:
-
-        t1 = time()
-        p,q = Algorithms.GradientDescent_optimized(ratings,filter_matrix,dim=7,iters=test_val,alpha = a)
-        runs[a][test_val].append(time()-t1)
-        runs[a][test_val].append(Algorithms.RMSE(ratings,filter_matrix,p,q))
 
 from matplotlib import pyplot as plt 
+fig, ax = plt.subplots(len(dimensions))
 
+for i,d in enumerate(dimensions):
+    for r,a in enumerate(runs):
+        ax[i].set_title(f"dim = {dimensions[i]}",fontsize=10)
+        ax[i].plot(iter_val,runs[a][d]['rmse'], color=f"{colors[a]}",marker='x',label=f"a={a}_rmse")
+        ax[i].set_ylabel("rmse")
+        ax[i].set_xlabel("iterations run")
+plt.legend()
 
-fix, ax = plt.subplots(len(alphas))
-
-for i,a in enumerate(runs):
-    for x in runs[a]:
-        ax[i].scatter(x,times[a], color=colors[a])
-        ax[i].scatter(x,rmses[a], color=colors[a])
 plt.show()
