@@ -53,17 +53,17 @@ def GradientDescent_optimized(A,filter_matrix,dim=10,alpha=.1,iters=1):
     q       = tf.Variable(tf.random.uniform(shape = [dim,cols],dtype=tf.dtypes.float32))
 
     # init the constants for a loop
-    i = tf.Variable(0,dtype=tf.dtypes.int32) 
-    j = tf.Variable(0,dtype=tf.dtypes.int32) 
     iteration = tf.Variable(0,dtype=tf.dtypes.int32)
 
-    # Run 'iter' times 
+    # Run 'iter' times
     while tf.less(iteration,iters):
+        i = tf.Variable(0,dtype=tf.dtypes.int32)
+        j = tf.Variable(0,dtype=tf.dtypes.int32)
         iteration.assign_add(1)
-        # iter through cols 
+        # iter through cols
         while tf.less(j, cols):
 
-            # iter through rows 
+            # iter through rows
             while tf.less(i, rows):
 
                 # skip if 0
@@ -80,7 +80,7 @@ def GradientDescent_optimized(A,filter_matrix,dim=10,alpha=.1,iters=1):
 
                 # find where to nudge down the gradient
                 nudge = tf.math.multiply(err,alpha)
-                
+
                 # update p and q vals
                 p[i].assign  (tf.math.add(  p_i,    tf.math.multiply(q_j,nudge)))
                 q[:,j].assign(tf.math.add(  q_j,    tf.math.multiply(p_i,nudge)))
@@ -90,7 +90,7 @@ def GradientDescent_optimized(A,filter_matrix,dim=10,alpha=.1,iters=1):
 
 
     return p,q
-  
+
 @tf.function
 def update_val(err,alpha,q,j):
 

@@ -1,11 +1,11 @@
 import tensorflow as tf
 import pandas as pd
 import numpy as np
+import scipy
 import os
 import Algorithms
 from terminal import *
 from time import time
-
 # For s**ts and giggles
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 tf.config.run_functions_eagerly(True)
@@ -70,54 +70,15 @@ def read_data():
     fill(small_ratings_matrix,'zero')
 
     # convert the dataframe to a Tensor
-    partial_ratings_tensor  = tf.convert_to_tensor(  small_ratings_matrix,   dtype = _f32)
-
+    partial_ratings_matrix  = small_ratings_matrix.to_numpy()
+    x,y = np.nonzero(partial_ratings_matrix)
+    filter_matrix = scipy.sparse.csr_matrix(([1 for _ in x], zip(x,y)),shape=np.shape(partial_ratings_matrix)).to_dense()
+    
+    print()
     # convert all non_zero elements to 1
-    partial_ratings_filter  = tf.sparse.to_dense(tf.sparse.map_values(tf.ones_like,tf.sparse.from_dense(partial_ratings_tensor)))
-    partial_ratings_filter  = tf.cast(partial_ratings_filter, dtype=_f32)
 
     printc(f"\tRead data in {(time()-t1):.3f} seconds",GREEN)
-    return partial_ratings_tensor, partial_ratings_filter
+    return partial_ratings_matrix, filter_matrix
 
 ratings, filter_matrix = read_data()
-# Ascertain what dimensions we are in
-rows    = tf.Variable(ratings.shape[0],dtype=tf.dtypes.int32)
-cols    = tf.Variable(ratings.shape[1],dtype=tf.dtypes.int32)
-
-alphas = [.001,.0001,.00001,.000001]
-iter_val = [1]
-dimensions = [40,50,70,100]
-
-
-runs =      {a : { d : {'time' : [], 'rmse' : []} for d in dimensions} for a in alphas}
-colors =    {.00001 : 'k', .5 : 'g', .000001 : 'r', .05 : 'm', .01 : 'c', .001 : 'b', .0001 : 'y'}
-
-for d in dimensions:
-    printc(f"\nDIMENSION: {d}",BLUE)
-    for a in alphas:
-        printc(f"\nGathering data for alpha = {a}\n\titer= ",TAN,endl='')
-        for test_val in iter_val:
-            lowest_score = 100000000
-            t1 = time()
-            for i in range(1):
-                p,q = Algorithms.GradientDescent_optimized(ratings,filter_matrix,dim=d,iters=test_val,alpha = a)
-                run_err = Algorithms.RMSE(ratings,filter_matrix,p,q)
-                if run_err < lowest_score:
-                    lowest_score = run_err
-            printc(f" {test_val}:{(time()-t1):.2f}  ",TAN,endl='')
-            runs[a][d]['rmse'].append(lowest_score)
-
-
-
-from matplotlib import pyplot as plt
-fig, ax = plt.subplots(len(dimensions))
-
-for i,d in enumerate(dimensions):
-    for r,a in enumerate(runs):
-        ax[i].set_title(f"dim = {dimensions[i]}",fontsize=10)
-        ax[i].plot(iter_val,runs[a][d]['rmse'], color=f"{colors[a]}",marker='x',label=f"a={a}_rmse")
-        ax[i].set_ylabel("rmse")
-        ax[i].set_xlabel("iterations run")
-plt.legend()
-
-plt.show()
+Algorithms.GradientDescent_optimized(ratings,filter_matrix,dim=100,alpha=.01,iters=10)
