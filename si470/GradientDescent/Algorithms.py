@@ -49,12 +49,29 @@ def GradientDescent_optimized(A,filter_matrix,dim=10,alpha=.1,iters=1):
     rows    = tf.Variable(A.shape[0],dtype=tf.dtypes.int32)
     cols    = tf.Variable(A.shape[1],dtype=tf.dtypes.int32)
     # Create the P and Q matrices
-    p       = tf.Variable(tf.random.uniform(shape = [rows,dim],dtype=tf.dtypes.float32))
-    q       = tf.Variable(tf.random.uniform(shape = [dim,cols],dtype=tf.dtypes.float32))
+    p       = tf.Variable(tf.random.uniform(shape = [rows,dim],minval=1, maxval=2,dtype=tf.dtypes.float32))
+    q       = tf.Variable(tf.random.uniform(shape = [dim,cols],minval=1, maxval=2,dtype=tf.dtypes.float32))
+
+    bests = []
+    for min in np.arange(0,3,.1):
+        for max in np.arange(0,3,.1):
+            if min >= max:
+                continue
+            min_err = 10000000000
+            for i in range(20):
+                p       = tf.Variable(tf.random.uniform(shape = [rows,dim],minval=min, maxval=max,dtype=tf.dtypes.float32))
+                q       = tf.Variable(tf.random.uniform(shape = [dim,cols],minval=min, maxval=max,dtype=tf.dtypes.float32))
+                err = RMSE(A,filter_matrix,p,q)
+                if err < min_err:
+                    min_err = err
+            bests.append((min_err,(min,max)))
+    bests.sort()
+    print(bests[:5])
+    return None, None, None
 
     # init the constants for a loop
     iteration = tf.Variable(0,dtype=tf.dtypes.int32)
-
+    rmses = []
     # Run 'iter' times
     while tf.less(iteration,iters):
         i = tf.Variable(0,dtype=tf.dtypes.int32)
@@ -82,14 +99,15 @@ def GradientDescent_optimized(A,filter_matrix,dim=10,alpha=.1,iters=1):
                 nudge = tf.math.multiply(err,alpha)
 
                 # update p and q vals
-                p[i].assign  (tf.math.add(  p_i,    tf.math.multiply(q_j,nudge)))
-                q[:,j].assign(tf.math.add(  q_j,    tf.math.multiply(p_i,nudge)))
+                p[i].   assign  (tf.math.add(  p_i,    tf.math.multiply(q_j,nudge)))
+                q[:,j]. assign  (tf.math.add(  q_j,    tf.math.multiply(p_i,nudge)))
 
                 i.assign_add(1)
             j.assign_add(1)
-
-
-    return p,q
+        error = RMSE(A,filter_matrix,p,q)
+        print(f"rmse now: {error}",TAN)
+        rmses.append(error)
+    return p,q, error
 
 @tf.function
 def update_val(err,alpha,q,j):
