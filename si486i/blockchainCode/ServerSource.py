@@ -5,7 +5,7 @@ from BlockchainUtilities import *
 from os.path import isfile, isdir
 from fcntl import flock, LOCK_SH,LOCK_EX, LOCK_UN
 from json import dumps, loads
-from os import listdir, mkdir
+import os 
 import argparse
 import sys
 from pprint import pp
@@ -85,7 +85,6 @@ class StaticServer:
 
 
 
-# This Class is where its at
 
 class DynamicServer:
 
@@ -212,8 +211,8 @@ class DynamicServer:
         printc(f"\tFetching local chains",TAN)
 
         # Make sure 'cache' folder exists
-        if not isdir('cache'):
-            mkdir('cache')
+        if not os.path.isdir('cache'):
+            os.path.mkdir('cache')
 
         # Make sure 'current.json' exists
         if not isfile('cache/current.json'):

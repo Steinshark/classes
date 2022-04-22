@@ -9,7 +9,7 @@ import sys
 _DATASET = {"X":[],"y":[]}
 _VisualSim  	= False
 _ShootDownRange = 100
-_NetRangeAir 	= 450
+_NetRangeAir 	= 350
 _NetRangeGround = 100
 _PacketRange	= 100
 _PCount			= 0
@@ -51,7 +51,7 @@ def prob_model(model,dist):
 		if dist > _ShootDownRange:
 			return False
 		else:
-			return (1 / (10*(dist+2))) < random.uniform(0,1)#Model assumes for every hour.
+			return random.uniform(0.,024) + (1 / (10*(dist+2))) < random.uniform(0,1)#Model assumes for every hour.
 
 
 	#Define the chance of network traffic going through 
@@ -59,10 +59,10 @@ def prob_model(model,dist):
 		global _PCount
 		global _PNext
 		_PCount += 1
-		if dist > _PacketRange:
+		if dist > _NetRangeAir:
 			return 0
 		else:
-			p = (_PacketRange - dist) / (_PacketRange + dist) #Assume an exponential dropoff
+			p = random.uniform(.05,.15) + (_NetRangeAir - dist) / (_NetRangeAir + dist) #Assume an exponential dropoff
 			#Just cause
 			if _PCount % _PNext == 0:
 				_PNext = random.randint(20,300)
@@ -70,7 +70,6 @@ def prob_model(model,dist):
 				d_p = 1 - p 
 				p = 1
 
-			
 			return int(random.uniform(0,1) < p)
 
 class airAsset:
@@ -208,13 +207,9 @@ class battlespace:
 
 	def compute_environment(self,sim=True):
 		self.hour += 1
-		self.w,self.h = self.screen.get_size()
-		if not sim:
-			self.draw_units()
-			self.find_networks()
-			return
 		self.move_units()
 		if _VisualSim:
+			self.w,self.h = self.screen.get_size()
 			self.draw_units()
 		self.find_networks()
 		self.simulate_scene()
@@ -285,12 +280,14 @@ class battlespace:
 							new_net += 1
 
 						self.networks[new_net] = []
-						for k in self.networks[u2.net] + self.networks[u1.net]:
+						old_1 = u1.net 
+						old_2 = u2.net 
+						for k in self.networks[old_1] + self.networks[old_2]:
 							self.networks[new_net].append(k)
 							k.net = new_net
 
-						del(self.networks[u2.net])
-						del(self.networks[u1.net])
+						del(self.networks[old_1])
+						del(self.networks[old_2])
 
 		for i in self.friendlyGround:
 			if i.net is None:
@@ -337,7 +334,7 @@ class battlespace:
 					d = euclidean(a.x,a.y,e.x,e.y)
 
 					if d < _IntelRange:
-						a.intel += ((d - _IntelRange) / _IntelRange)**2
+						a.intel += ((random.randint(5,100) + (d - _IntelRange)) / _IntelRange)**2
 					#Check for shootdown
 					if prob_model("shootdown",d):
 						a.ded = True
@@ -353,7 +350,6 @@ class battlespace:
 				for n in self.networks:
 					if n in a.nets:
 						nets.append(self.networks[n])
-				print(f"Nets on aircraft {a}: {len(nets)}")
 				c = 0 
 				# Check each combination of networks that this aircraft is sponsoring
 				for n1 in nets:
@@ -370,7 +366,7 @@ class battlespace:
 									if random.uniform(0,1) > .1:
 										# If friendly is within 50 of enemy, they certainly will communicate
 										for e in self.enemy:
-											if euclidean(p1.x,p1.y,p2.x,p2.y) < 50:
+											if euclidean(p1.x,p1.y,e.x,e.y) < 50:
 												break
 										else:
 											continue# skip 90% of time 
@@ -381,17 +377,20 @@ class battlespace:
 									#Try to send up to 100 packets. Goes through the probability model twice, once for the probability 
 									#that the sender gets it to the aircraft, and again for the aircraft getting it to the
 									#receiver
-									packets_successfully_sent 		=  sum([prob_model("packet_success",d) for _ in range(random.randint(0,100))])
+									traffic = [prob_model("packet_success",d) for _ in range(random.randint(50,100))]
+									packets_successfully_sent 		=  sum(traffic)
+									
 									packets_successfully_recieved 	=  sum([prob_model("packet_success",d2) for _ in range(int(packets_successfully_sent))])
-										
 									#Update our counts of both the aircraft and of the whole model
 									a.packets_handled += packets_successfully_recieved
 									self.packets += packets_successfully_recieved
-				print(f"\t{c} units communicated")
+
+			if not  _VisualSim:
+				continue 	 
 			#Display the information in the model HUD
 			text1 = _HFONT.render(f"Aircraft {a}", True, _White, _Black)
-			text2 = _HFONT.render(f"Nets sponsored:\t{len(a.nets)}", True, _White, _Black)
-			text3 = _HFONT.render(f"Packets Handled:\t{a.packets_handled}", True, _White, _Black)
+			text2 = _HFONT.render(f"Nets sponsored:{len(a.nets)}", True, _White, _Black)
+			text3 = _HFONT.render(f"Packets Handled:{a.packets_handled}", True, _White, _Black)
 			
 			rect1 = text1.get_rect()
 			rect2 = text2.get_rect()
@@ -446,8 +445,7 @@ class battlespace:
 
 			# HEURISTIC LOOKS AT 
 			#       cost if ded 	number of packets (scaled) 	  	regain cost if alive    Time lived helpful      total networkds bridged  
-			score = (-600) 			+ (a.packets_handled/4)**2 	+ (int(not a.ded)*600) 	- (a.hours_lived) 	+ (a.connected/10)
-			print(f"{a} scored: {score}")
+			score = (-600) 			+ (a.packets_handled/1000)**1.5 	+ (int(not a.ded)*600) 	- (a.hours_lived) 	+ (a.connected/10) + (a.intel)
 			_DATASET['y'].append(score)
 
 
@@ -497,6 +495,8 @@ class Engine:
 						b.compute_environment()
 						pygame.display.flip()
 						hour += 1
+						if len([True for a in b.friendlyAir if not a.ded]) == 0:
+							hour = 100
 						continue
 					elif event.type == pygame.KEYDOWN and event.key == pygame.K_t:
 						set_running = not set_running
@@ -507,7 +507,25 @@ class Engine:
 					b.compute_environment(sim=True)
 					pygame.display.flip()
 					hour += 1
+					if len([True for a in b.friendlyAir if not a.ded]) == 0:
+						hour = 100
 					continue
+			b.end_round()
+		print(f"ran {self.iterations} simulations in {(time.time()-t1):.3f} seconds")
+
+	def generateTrainingData(self):
+		t1 = time.time()
+		for i in range(self.iterations):
+			if i % 10 == 0:
+				print(f"finished {i} iterations in {(time.time()-t1):.3f}")
+				t1 = time.time()
+			b = battlespace(self.width,self.height,self.f,self.e,self.a,self.screen)
+			hour = 0
+			while hour < 100:
+				b.compute_environment()
+				hour += 1
+				if len([True for a in b.friendlyAir if not a.ded]) == 0:
+					hour = 100
 			b.end_round()
 		print(f"ran {self.iterations} simulations in {(time.time()-t1):.3f} seconds")
 
@@ -545,40 +563,13 @@ class Engine:
 
 
 if __name__ == "__main__":
-
-	if False:
-		_VisualSim = True
-		engine = Engine(1,1920,1080,30,20,2)
-		engine.generateNewBattlespace()
-		exit(0)
-
-	try:
-		width = int(sys.argv[1])
-		height = int(sys.argv[2])
-		f = int(sys.argv[3])
-		if  f > _FMAX:
-			print(f"up to {_FMAX} friendlies")
-		e = int(sys.argv[4])
-		if  e > _EMAX:
-			print(f"up to {_EMAX} enemies")
-		a = int(sys.argv[5])
-		if  a > _AMAX:
-			print(f"up to {_AMAX} air units")
-		i = int(sys.argv[6])
-		v = sys.argv[7] in ['t','T']
-	except IndexError:
-		print("usage: python sim.py [width] [height] [#friendly_units] [#hostile_units] [#air_assets] [#iterations] [visual (t/f)]")
-		exit(1)
-	_VisualSim = v
-	engine = Engine(i,width,height,f,e,a)
-	engine.run()
-
-	if True:
-		arrs = []
-		for x,y in zip(_DATASET['X'],_DATASET['y']):
-			arrs.append(numpy.append(x,y))
-		numpy_arr = numpy.array(arrs)
-		numpy.save("sim_data1",numpy_arr)
+	engine = Engine(1000,1920,1080,30,20,3)
+	engine.generateTrainingData()
+	arrs = []
+	for x,y in zip(_DATASET['X'],_DATASET['y']):
+		arrs.append(numpy.append(x,y))
+	numpy_arr = numpy.array(arrs)
+	numpy.save(f"sim_data2_{1920}_{1080}",numpy_arr)
 
 
 
