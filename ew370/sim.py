@@ -6,6 +6,8 @@ import pprint
 import numpy
 import time 
 import sys 
+from numba import jit
+
 _DATASET = {"X":[],"y":[]}
 _VisualSim  	= False
 _ShootDownRange = 100
@@ -39,6 +41,7 @@ _AMAX 			= 5
 
 
 #Euclidean distance 
+@jit
 def euclidean(my_x,my_y,x,y):
 	d_x = my_x - x
 	d_y = my_y - y 
@@ -51,7 +54,7 @@ def prob_model(model,dist):
 		if dist > _ShootDownRange:
 			return False
 		else:
-			return random.uniform(0.,024) + (1 / (10*(dist+2))) < random.uniform(0,1)#Model assumes for every hour.
+			return random.uniform(0,.024) + (1 / (10*(dist+2))) < random.uniform(0,1)#Model assumes for every hour.
 
 
 	#Define the chance of network traffic going through 
@@ -162,7 +165,6 @@ class battlespace:
 
 			enemy.x = x + math.cos(r)*dist 
 			enemy.y = y + math.sin(r)*dist	
-
 
 
 	def move_units(self):
@@ -352,6 +354,7 @@ class battlespace:
 						nets.append(self.networks[n])
 				c = 0 
 				# Check each combination of networks that this aircraft is sponsoring
+				distances = {}
 				for n1 in nets:
 					for n2 in nets:
 
@@ -367,12 +370,24 @@ class battlespace:
 										# If friendly is within 50 of enemy, they certainly will communicate
 										for e in self.enemy:
 											if euclidean(p1.x,p1.y,e.x,e.y) < 50:
-												break
+												break 
 										else:
 											continue# skip 90% of time 
 									c += 1
-									d = euclidean(p1.x,p1.y,a.x,a.y) 	#distance of "sender" 
-									d2 = euclidean(p2.x,p2.y,a.x,a.y)	#distance of "reciever"
+									'''
+									if not f"{p1}{a}" in distances:
+										d = euclidean(p1.x,p1.y,a.x,a.y) 	#distance of "sender" 
+										distances[f"{p1}{a}"] = d 
+									else:
+										d = distances[f"{p1}{a}"]
+									if not f"{p2}{a}" in distances:
+										d2 = euclidean(p2.x,p2.y,a.x,a.y)	#distance of "reciever"
+										distances[f"{p2}{a}"] = d2
+									else:
+										d2 = distances[f"{p2}{a}"]
+									'''
+									d = euclidean(p1.x,p1.y,a.x,a.y)
+									d2 = euclidean(p2.x,p2.y,a.x,a.y)
 
 									#Try to send up to 100 packets. Goes through the probability model twice, once for the probability 
 									#that the sender gets it to the aircraft, and again for the aircraft getting it to the
@@ -384,7 +399,6 @@ class battlespace:
 									#Update our counts of both the aircraft and of the whole model
 									a.packets_handled += packets_successfully_recieved
 									self.packets += packets_successfully_recieved
-
 			if not  _VisualSim:
 				continue 	 
 			#Display the information in the model HUD
@@ -515,9 +529,12 @@ class Engine:
 
 	def generateTrainingData(self):
 		t1 = time.time()
+		avg = 0 
 		for i in range(self.iterations):
-			if i % 10 == 0:
-				print(f"finished {i} iterations in {(time.time()-t1):.3f}")
+			if i % 100 == 0:
+				dt = time.time()-t1
+				avg += dt 
+				print(f"finished {i} iterations in {(dt):.3f} - avg {(avg/(i+1)):.3f}")
 				t1 = time.time()
 			b = battlespace(self.width,self.height,self.f,self.e,self.a,self.screen)
 			hour = 0
@@ -563,13 +580,13 @@ class Engine:
 
 
 if __name__ == "__main__":
-	engine = Engine(1000,1920,1080,30,20,3)
+	engine = Engine(25000,1920,1080,30,20,3)
 	engine.generateTrainingData()
 	arrs = []
 	for x,y in zip(_DATASET['X'],_DATASET['y']):
 		arrs.append(numpy.append(x,y))
 	numpy_arr = numpy.array(arrs)
-	numpy.save(f"sim_data2_{1920}_{1080}",numpy_arr)
+	numpy.save(f"sim_data4_{1920}_{1080}",numpy_arr)
 
 
 
