@@ -6,9 +6,14 @@ import pprint
 import numpy
 import time 
 import sys 
+import os
 from numba import jit
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
 
-_DATASET = {"X":[],"y":[]}
+_DATASET = {"X_com":[],"y_com":[],"X_kill":[],"y_kill":[]}
 _VisualSim  	= False
 _ShootDownRange = 100
 _NetRangeAir 	= 350
@@ -28,6 +33,7 @@ _Blue 			= (45,100,244)
 _Green			= (55,255,100)
 _Red 			= (244,100,100)
 _Black			= (0,0,0)
+_DGRAY			= (25,25,30)
 _White 			= (244,244,255)
 _FONT 			= None
 _HFONT 			= None
@@ -88,6 +94,7 @@ class airAsset:
 		self.nets 		 	  	= []
 		self.connected			= 0
 		self.intel     			= 0
+		self.damage_contribution = 0
 	def dist_to(self,unit):
 		x,y = unit 
 		return math.sqrt((self.x-x)**2 + (self.y-y)**2 ) 
@@ -120,9 +127,11 @@ class enemyAsset:
 		self.name = name 
 		self.x = x 
 		self.y = y
+		self.spotted = False
+		self.mark = False
 
 
-class battlespace:
+class Battlespace:
 	def __init__(self,w,h,f_units,e_units,air_units,screen,forSim=True):
 		self.friendlyGround = [groundAsset(f"f{i}",0,0) for i in range(f_units)]
 		self.enemy 			= [enemyAsset(f"e{i}",0,0) for i in range(e_units)]
@@ -143,7 +152,7 @@ class battlespace:
 
 	def set_units(self):
 
-		friendly_circles = [(random.uniform(20 ,(self.w/2) - 1),random.uniform(200,(self.h) - 201)) for _ in range(_FCircles)]
+		friendly_circles = [(random.uniform(20 ,(self.w/1.4) - 1),random.uniform(200,(self.h) - 201)) for _ in range(_FCircles)]
 
 		for unit in self.friendlyGround:
 			x,y = friendly_circles[random.randint(0,_FCircles-1)]
@@ -156,7 +165,7 @@ class battlespace:
 			unit.y = y + math.sin(r)*dist
 
 
-		enemy_circles = [(random.uniform((self.w/2) - 1, self.w-200),random.uniform(200,(self.h) - 201)) for _ in range(_ECircles)]
+		enemy_circles = [(random.uniform((self.w/3) - 1, self.w-200),random.uniform(200,(self.h) - 201)) for _ in range(_ECircles)]
 		for enemy in self.enemy:
 			x,y = enemy_circles[random.randint(0,_ECircles-1)]
 			angle = random.uniform(0,360)
@@ -165,7 +174,6 @@ class battlespace:
 
 			enemy.x = x + math.cos(r)*dist 
 			enemy.y = y + math.sin(r)*dist	
-
 
 	def move_units(self):
 
@@ -322,6 +330,21 @@ class battlespace:
 	def simulate_scene(self):
 
 		tab = 100
+
+		#Kill and spot via ground units
+		for f in self.friendlyGround:
+			for e in self.enemy:
+				d = euclidean(f.x,f.y,e.x,e.y)
+				if d < 40:
+					e.spotted = True
+					if d < 10:
+						if (random.uniform(.3,.4)+(len(self.networks[f.net])/15) > .5):
+							e.mark = True 
+							for a in self.friendlyAir:
+								if f in a.peers:
+									a.damage_contribution += 40
+		self.enemy = [e for e in self.enemy if not e.mark]
+
 		for a in self.friendlyAir:
 
 			#Do nothing if ded
@@ -337,6 +360,9 @@ class battlespace:
 
 					if d < _IntelRange:
 						a.intel += ((random.randint(5,100) + (d - _IntelRange)) / _IntelRange)**2
+						if not e.spotted:
+							e.spotted = True 
+							a.intel += 20
 					#Check for shootdown
 					if prob_model("shootdown",d):
 						a.ded = True
@@ -452,15 +478,65 @@ class battlespace:
 			data_list.append(unit.x)
 			data_list.append(unit.y)
 
-			_DATASET["X"].append(numpy.array(data_list))
+			_DATASET["X_kill"].append(numpy.array(data_list))
+			_DATASET["X_com"].append(numpy.array(data_list))
 
 	def end_round(self):
 		for a in self.friendlyAir:
 
 			# HEURISTIC LOOKS AT 
 			#       cost if ded 	number of packets (scaled) 	  	regain cost if alive    Time lived helpful      total networkds bridged  
-			score = (-600) 			+ (a.packets_handled/1000)**1.5 	+ (int(not a.ded)*600) 	- (a.hours_lived) 	+ (a.connected/10) + (a.intel)
-			_DATASET['y'].append(score)
+			score = (-600) 			+ (a.packets_handled/1000)**1.5 	+ (int(not a.ded)*600) 	- (a.hours_lived) 	+ (a.connected/10)
+			d2e_score = 3*a.intel + a.damage_contribution - 300 + (int(not a.ded)*600)
+			
+			_DATASET['y_kill'].append(d2e_score)
+			_DATASET['y_com'].append(score)
+
+	def generate_model_input(self,interpolationX=20,interpolationY=20):
+
+		self.domain_width = interpolationX
+		self.domain_height = interpolationY
+
+		self.datapoints = {}
+
+		print(f"generating data along x: {self.w} and y: {self.h}")
+		x_ticks = [(interpolationX/2) + x_div*interpolationX for x_div in range(int(self.w/interpolationX))]
+		y_ticks = [(interpolationY/2) + y_div*interpolationY for y_div in range(int(self.h/interpolationY))]
+
+		for x in x_ticks:
+			for y in y_ticks:
+
+				new_datapoint = []
+
+				for f in range(_FMAX):
+					if f < len(self.friendlyGround):
+
+						unit = self.friendlyGround[f]
+						new_datapoint.append(unit.x)
+						new_datapoint.append(unit.y)
+						new_datapoint.append(euclidean(unit.x,unit.y,x,y))
+					else:
+						new_datapoint.append(0)
+						new_datapoint.append(0)
+						new_datapoint.append(0)
+
+				for f in range(_EMAX):
+					if f < len(self.enemy):
+
+						unit = self.enemy[f]
+						new_datapoint.append(unit.x)
+						new_datapoint.append(unit.y)
+						new_datapoint.append(euclidean(unit.x,unit.y,x,y))
+
+					else:
+						new_datapoint.append(0)
+						new_datapoint.append(0)
+						new_datapoint.append(0)
+
+				new_datapoint.append(x)
+				new_datapoint.append(y)
+
+				self.datapoints[(x,y)] = numpy.array(new_datapoint)
 
 
 class Engine:
@@ -474,21 +550,26 @@ class Engine:
 		self.f = f
 		self.e = e 
 		self.a = a 
+
 		# engine components
 		if _VisualSim:
 			options = pygame.RESIZABLE
 			self.engine = pygame.init()
 			self.screen = pygame.display.set_mode((self.width,self.height),options) 
 			_FONT 			= pygame.font.SysFont('arial', 10)
+			pygame.display.set_caption('Battlefield Simulation v0.1')
 
 			_HFONT 			= pygame.font.SysFont('arial', 20)
+
+		self.battlespace = Battlespace(self.width,self.height,self.f,self.e,self.a,self.screen)
+
 
 	def run(self):
 		t1 = time.time()
 		for i in range(self.iterations):
 			if i % 100 == 0:
 				print(f"finished {i} iterations")
-			b = battlespace(self.width,self.height,self.f,self.e,self.a,self.screen)
+			b = Battlespace(self.width,self.height,self.f,self.e,self.a,self.screen)
 			b.draw_units()
 			pygame.display.flip()
 
@@ -496,8 +577,8 @@ class Engine:
 			hour = 0
 			while hour < 100:
 				self.width,self.height = self.screen.get_size()
-				b.w = width
-				b.h = height
+				b.w = self.width
+				b.h = self.height
 
 				for event in pygame.event.get():
 					if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
@@ -536,7 +617,7 @@ class Engine:
 				avg += dt 
 				print(f"finished {i} iterations in {(dt):.3f} - avg {(avg/(i+1)):.3f}")
 				t1 = time.time()
-			b = battlespace(self.width,self.height,self.f,self.e,self.a,self.screen)
+			b = Battlespace(self.width,self.height,self.f,self.e,self.a,self.screen)
 			hour = 0
 			while hour < 100:
 				b.compute_environment()
@@ -549,45 +630,223 @@ class Engine:
 	def generateNewBattlespace(self):
 		self.width,self.height = self.screen.get_size()
 		set_running = False
-		b = battlespace(self.width,self.height,self.f,self.e,self.a,self.screen,forSim=False)
-		b.compute_environment()
-		b.draw_units()
+		self.battlespace.compute_environment()
+		self.battlespace.draw_units()
 		pygame.display.flip()
 		while True:
 			self.width,self.height = self.screen.get_size()
-
+			self.battlespace.w = self.width 
+			self.battlespace.h = self.height
 			for event in pygame.event.get():
 				if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
 					pygame.quit()
 					exit(0)
 				elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-					self.screen.fill(_Black)
+					self.screen.fill(_DGRAY)
 
-					b.compute_environment(sim=True)
+					self.battlespace.compute_environment(sim=True)
 					pygame.display.flip()
 					continue
 				elif event.type == pygame.KEYDOWN and event.key == pygame.K_t:
 					set_running = not set_running
 
+				elif event.type == pygame.KEYDOWN and event.key == pygame.K_c:
+					self.battlespace.generate_model_input()
+					self.predict_for_Battlespace(method="com")
+					pygame.display.flip()
+					continue
+				elif event.type == pygame.KEYDOWN and event.key == pygame.K_k:
+					self.battlespace.generate_model_input()
+					self.predict_for_Battlespace(method="kill")
+					pygame.display.flip()
+					continue
 			if set_running:
-				self.screen.fill(_Black)
+				self.screen.fill(_DGRAY)
 
-				b.compute_environment(sim=True)
+				self.battlespace.compute_environment(sim=True)
 				pygame.display.flip()
 				continue
 
+	def construct_predictive_model(self,data_folder="data"):
+		print(f"developing models")
 
+		kill_data = None
+		com_data = None
+
+		# Load pre_computed data into one array 
+		for file in os.listdir(data_folder):
+			if file[-4:] == '.npy':
+				if "kill" in file:	
+					if kill_data is None:
+						kill_data = numpy.load(os.path.join(data_folder,file))
+					else:
+						new_r = numpy.load(os.path.join(data_folder,file))
+						kill_data = numpy.row_stack((kill_data,new_r))
+				elif "com" in file:
+					if com_data is None:
+						com_data = numpy.load(os.path.join(data_folder,file))
+					else:
+						com_data = numpy.row_stack((com_data,numpy.load(os.path.join(data_folder,file))))				
+
+		#Grab all the data
+		kill_data_X = kill_data[:,:-1]
+		kill_data_y = kill_data[:,-1]
+		com_data_X  = com_data[:,:-1]
+		com_data_y  = com_data[:,-1]
+
+		input_dim 	= len(kill_data_X[0])
+		output_dim 	= 1
+
+		# Here we build a 3 x hidden layer deep neural network to learn the patterns
+		self.kill_model=tf.keras.Sequential([
+		  	tf.keras.layers.Dense(input_dim,activation='relu'),
+			tf.keras.layers.Dense(100,activation='relu'),
+			tf.keras.layers.Dense(10,activation='relu'),
+			tf.keras.layers.Dense(10,activation='relu'),
+		  	tf.keras.layers.Dense(output_dim)
+		  ])
+
+		self.com_model=tf.keras.Sequential([
+		  	tf.keras.layers.Dense(input_dim,activation='relu'),
+			tf.keras.layers.Dense(100,activation='relu'),
+			tf.keras.layers.Dense(10,activation='relu'),
+			tf.keras.layers.Dense(10,activation='relu'),
+		  	tf.keras.layers.Dense(output_dim)
+		  ])
+
+		self.kill_model.compile(optimizer='adam',loss=tf.keras.losses.MeanSquaredError(),metrics=['MSE'])
+		self.com_model.compile(optimizer='adam',loss=tf.keras.losses.MeanSquaredError(),metrics=['MSE'])
+
+ 	
+ 		#Train the kill model 
+		print(f"Training Kill model")
+		t1 = time.time()
+		self.kill_model.fit(kill_data_X,kill_data_y,
+		    validation_split=.25, #auto train/test splitting...
+		    callbacks=[tf.keras.callbacks.EarlyStopping(restore_best_weights=True,patience=4)],
+		    epochs=4,
+		    verbose=1)
+		print(f"trained model in {(time.time()-t1):.3f}s\nTraining com model")
+
+		#Train the com model
+		t1 = time.time()
+		self.com_model.fit(com_data_X,com_data_y,
+		    validation_split=.25, #auto train/test splitting...
+		    callbacks=[tf.keras.callbacks.EarlyStopping(restore_best_weights=True,patience=4)],
+		    epochs=4,
+		    verbose=1)
+		print(f"trained model in {(time.time()-t1):.3f}s")	
+
+	def predict_for_Battlespace(self,method="com"):
+		# Get input vectors of potential air_assets 
+		self.battlespace.generate_model_input()
+
+		# Prepare the rectangles with predictions 
+		self.battlespace.air_domains = {}
+
+		# Track for color scheming 
+		max_score = 0
+		min_score = 0
+
+		# Generate a prediction for each potential air asset location
+		input_vectors = []
+
+		# Collect all input vectors of this battlespace 
+		for location in self.battlespace.datapoints:
+			x,y = location
+
+			input_vectors.append(numpy.array([self.battlespace.datapoints[location]]))
+			# Find the location and score values for this domain 
+			x_anch,y_anch,width,height = (x-(self.battlespace.domain_width/2),y-(self.battlespace.domain_height/2),self.battlespace.domain_width,self.battlespace.domain_height)
+			self.battlespace.air_domains[x,y] = {"rect":(x_anch,y_anch ,width,height),"score":0}	
+		
+
+		# Predict on all vectors
+		if method == 'com':
+			output_vectors = self.com_model.predict(numpy.array(input_vectors))
+		elif method == 'kill':
+			output_vectors = self.kill_model.predict(numpy.array(input_vectors))
+
+		# Add to model
+		for i,location in enumerate(self.battlespace.datapoints):
+			x,y = location
+			predicted_score = output_vectors[i]
+			self.battlespace.air_domains[x,y]["score"] = predicted_score 
+
+			# update vals
+			if predicted_score < min_score:
+				min_score = predicted_score
+			elif predicted_score > max_score:
+				max_score = predicted_score
+
+		# Draw model
+		for loc in self.battlespace.air_domains:
+			rect_tuple = self.battlespace.air_domains[loc]['rect']
+			score = self.battlespace.air_domains[loc]['score']
+
+			# Create the image repr of the domain
+			s = pygame.Surface((rect_tuple[2],rect_tuple[3]), pygame.SRCALPHA)   # per-pixel alpha
+
+			# Find color 
+			if score < 0:
+				r_val = 255 * (score / min_score)
+				g_val = 55 
+				b_val = 55
+
+			elif score > 0:
+				r_val = 25
+				g_val = (55 * (score / max_score)) + 200
+				b_val = 25
+			s.fill((r_val,g_val,b_val,150))                    
+			self.screen.blit(s, (rect_tuple[0],rect_tuple[1]))
 
 
 if __name__ == "__main__":
-	engine = Engine(25000,1920,1080,30,20,3)
-	engine.generateTrainingData()
-	arrs = []
-	for x,y in zip(_DATASET['X'],_DATASET['y']):
-		arrs.append(numpy.append(x,y))
-	numpy_arr = numpy.array(arrs)
-	numpy.save(f"sim_data4_{1920}_{1080}",numpy_arr)
+	if sys.argv[1] == "simulate":
+		_VisualSim = True
+		engine = Engine(100,1920,1080,30,20,3)
+		engine.run()
+	elif sys.argv[1] == "collect":
+		n = int(input("n_iters: "))
+		for f_units in [5,10,15,20,25,30]:
+			for e_units in [5,10,15,20]:
+				print(f"calculating {f_units}, {e_units}:")
+				engine = Engine(n,1920,1080,f_units,e_units,3)
+				engine.generateTrainingData()
+		
+		# Save the battelspace comm data 
+		arrs_com = []
+		for x,y in zip(_DATASET['X_com'],_DATASET['y_com']):
+			arrs_com.append(numpy.append(x,y))
 
+		# Save the D2E sequence data 
+		arrs_kill = []
+		for x,y in zip(_DATASET['X_kill'],_DATASET['y_kill']):
+			arrs_kill.append(numpy.append(x,y))	
+
+
+		np_com = numpy.array(arrs_com)
+		np_kill = numpy.array(arrs_kill)
+
+		dir_name = 0 
+		while f"com_data{dir_name}.npy" in os.listdir("data"):\
+			dir_name += 1
+		numpy.save(os.path.join("data", f"com_data{dir_name}.npy"),np_com)
+
+		dir_name = 0
+		while f"kill_data{dir_name}.npy" in os.listdir("data"):\
+			dir_name += 1
+		numpy.save(os.path.join("data", f"kill_data{dir_name}.npy"),np_kill)
+
+
+	elif sys.argv[1] == "predict":
+		_VisualSim = True
+		f = 30 
+		e = 20 
+		a = 1 
+		engine = Engine(2000,800,600,f,e,a)
+		engine.construct_predictive_model()
+		engine.generateNewBattlespace()
 
 
 
