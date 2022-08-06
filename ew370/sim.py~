@@ -13,7 +13,7 @@ import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense
 
-_DATASET = {"X":[],"y":[]}
+_DATASET = {"X_com":[],"y_com":[],"X_kill":[],"y_kill":[]}
 _VisualSim  	= False
 _ShootDownRange = 100
 _NetRangeAir 	= 350
@@ -618,7 +618,7 @@ class Engine:
 				avg += dt 
 				print(f"finished {i} iterations in {(dt):.3f} - avg {(avg/(i+1)):.3f}")
 				t1 = time.time()
-            b = Battlespace(self.width,self.height,self.f,self.e,self.a,self.screen)
+			b = Battlespace(self.width,self.height,self.f,self.e,self.a,self.screen)
 			hour = 0
 			while hour < 100:
 				b.compute_environment()
@@ -656,6 +656,11 @@ class Engine:
 					self.predict_for_Battlespace(method="com")
 					pygame.display.flip()
 					continue
+				elif event.type == pygame.KEYDOWN and event.key == pygame.K_k:
+					self.battlespace.generate_model_input()
+					self.predict_for_Battlespace(method="kill")
+					pygame.display.flip()
+					continue
 			if set_running:
 				self.screen.fill(_DGRAY)
 
@@ -664,49 +669,79 @@ class Engine:
 				continue
 
 	def construct_predictive_model(self,data_folder="data"):
-		print(f"Initializing Neural Net")
+		print(f"developing models")
 
-        # Load data
-        data = None
-        for file in os.listdir(data_folder):
-				arr = numpy.load(os.path.join(data_folder,file))
-				if data is None:
-					data = arr
-				else:
-					kill_data = numpy.concatenate((data,arr))
-		
-		data_X = data[:,:-2]
-        data_y = data[:,-2:] #Network,Survive
+		kill_data = None
+		com_data = None
 
-		input_dim 	= len(data_X[0])
-		output_dim 	= 2
+		# Load pre_computed data into one array 
+		for file in os.listdir(data_folder):
+			if file[-4:] == '.npy':
+				fname = os.path.join(data_folder,file)
+				if "kill" in file:	
+					print(f"add {file} to kill")
+
+					if kill_data is None:
+						kill_data = numpy.load(fname)
+					else:
+						new_r = numpy.load(fname)
+						kill_data = numpy.row_stack((kill_data,new_r))
+				elif "com" in file:
+					print(f"add {file} to com")
+					if com_data is None:
+						com_data = numpy.load(fname)
+					else:
+						new_r = numpy.load(fname)
+						com_data = numpy.row_stack((com_data,new_r))				
+
+		#Grab all the data
+		kill_data_X = kill_data[:,:-1]
+		kill_data_y = kill_data[:,-1]
+		com_data_X  = com_data[:,:-1]
+		com_data_y  = com_data[:,-1]
+
+		input_dim 	= len(kill_data_X[0])
+		output_dim 	= 1
 
 		# Here we build a 3 x hidden layer deep neural network to learn the patterns
-		self.model=tf.keras.Sequential([
+		self.kill_model=tf.keras.Sequential([
 		  	tf.keras.layers.Dense(input_dim,activation='relu'),
-			tf.keras.layers.Dense(512,activation='relu'),
-			tf.keras.layers.Dense(32,activation='relu'),
-			tf.keras.layers.Dense(8,activation='relu'),
-            tf.keras.layers.Dense(32,activation="relu")
-            tf.keras.layers.Dense(64,activation="relu")
+			tf.keras.layers.Dense(100,activation='relu'),
+			tf.keras.layers.Dense(10,activation='relu'),
+			tf.keras.layers.Dense(10,activation='relu'),
 		  	tf.keras.layers.Dense(output_dim)
 		  ])
 
-        optimizer   = tf.keras.Optimizers.Adam(learning_rate=.001)
-        loss        = tf.keras.losses.MeanSquaredError()
-		self.model.compile(optimizer=optimizer,loss=loss,metrics=['MSE'])
+		self.com_model=tf.keras.Sequential([
+		  	tf.keras.layers.Dense(input_dim,activation='relu'),
+			tf.keras.layers.Dense(100,activation='relu'),
+			tf.keras.layers.Dense(10,activation='relu'),
+			tf.keras.layers.Dense(10,activation='relu'),
+		  	tf.keras.layers.Dense(output_dim)
+		  ])
+
+		self.kill_model.compile(optimizer='adam',loss=tf.keras.losses.MeanSquaredError(),metrics=['MSE'])
+		self.com_model.compile(optimizer='adam',loss=tf.keras.losses.MeanSquaredError(),metrics=['MSE'])
 
  	
  		#Train the kill model 
-		print(f"Training model")
+		print(f"Training Kill model")
 		t1 = time.time()
-        cb = tf.keras.callbacks.EarlyStopping(restore_best_weights=True,patience=3))
-		self.model.fit(data_X,data_y,
-		    validation_split=.25,
-		    callbacks=cb],
-		    epochs=20,
+		self.kill_model.fit(kill_data_X,kill_data_y,
+		    validation_split=.15, #auto train/test splitting...
+		    #callbacks=[tf.keras.callbacks.EarlyStopping(restore_best_weights=True,patience=7)],
+		    epochs=40,
 		    verbose=1)
-		print(f"trained model in {(time.time()-t1):.3f}s")
+		print(f"trained model in {(time.time()-t1):.3f}s\nTraining com model")
+
+		#Train the com model
+		t1 = time.time()
+		self.com_model.fit(com_data_X,com_data_y,
+		    validation_split=.15, #auto train/test splitting...
+		    #callbacks=[tf.keras.callbacks.EarlyStopping(restore_best_weights=True)],
+		    epochs=40,
+		    verbose=1)
+		print(f"trained model in {(time.time()-t1):.3f}s")	
 
 	def predict_for_Battlespace(self,method="com"):
 		# Get input vectors of potential air_assets 
